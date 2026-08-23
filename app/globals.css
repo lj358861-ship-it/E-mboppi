@@ -91,3 +91,39 @@ body {
 .neon-dot {
   box-shadow: 0 0 8px rgba(233, 48, 255, 0.9), 0 0 16px rgba(168, 85, 247, 0.6);
 }
+
+/* ===== Logotype E-Mboppi ===== */
+
+/* "Mboppi" en dégradé violet → magenta, animé lentement, façon enseigne premium */
+.logo-gradient {
+  background: linear-gradient(120deg, #7E22CE 0%, #A855F7 40%, #E930FF 75%, #C084FC 100%);
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: logoShift 6s ease-in-out infinite;
+}
+
+@keyframes logoShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Halo léger et chic, adapté aux fonds clairs (header desktop) */
+.logo-glow-soft {
+  text-shadow: 0 0 14px rgba(168, 85, 247, 0.28), 0 1px 1px rgba(30, 10, 69, 0.06);
+}
+
+/* Halo néon plus prononcé et pulsé, adapté aux fonds sombres (header mobile) */
+.logo-glow-pulse {
+  animation: logoGlowPulse 3.2s ease-in-out infinite;
+}
+
+@keyframes logoGlowPulse {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(168, 85, 247, 0.55), 0 0 24px rgba(233, 48, 255, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 16px rgba(168, 85, 247, 0.9), 0 0 38px rgba(233, 48, 255, 0.55);
+  }
+}

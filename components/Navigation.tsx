@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, Clapperboard, Mail, Info, Store, Heart } from "lucide-react";
+import { Home, Search, Clapperboard, Mail, Info, Store, Heart, LogIn } from "lucide-react";
 
 const liensBas = [
   { href: "/", label: "Accueil", icone: Home },
@@ -28,8 +28,10 @@ export default function Navigation() {
     <>
       {/* Desktop */}
       <header className="hidden md:flex sticky top-0 z-40 items-center justify-between px-8 py-4 bg-stone-50/90 backdrop-blur border-b border-stone-200">
-        <Link href="/" className="font-display text-2xl font-semibold text-indigo-900">
-          E-<span className="text-neon-500">Mboppi</span>
+        <Link href="/" className="font-display text-2xl font-semibold tracking-tight text-indigo-950 logo-glow-soft">
+          <span className="italic">E</span>
+          <span className="text-neon-500">-</span>
+          <span className="logo-gradient">Mboppi</span>
         </Link>
         <nav className="flex items-center gap-7 font-medium text-sm">
           {liensDesktop.map((l) => (
@@ -44,16 +46,30 @@ export default function Navigation() {
             </Link>
           ))}
         </nav>
-        <Link href="/a-propos#devenir-vendeur" className="btn-neon px-4 py-2 text-sm font-medium">
-          <Store size={16} /> Devenir vendeur
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/vendeur/connexion"
+            className={`text-sm font-medium transition-colors ${
+              pathname === "/vendeur/connexion" ? "text-neon-600" : "text-indigo-900/70 hover:text-indigo-900"
+            }`}
+          >
+            Connexion
+          </Link>
+          <Link href="/a-propos#devenir-vendeur" className="btn-neon px-4 py-2 text-sm font-medium">
+            <Store size={16} /> Devenir vendeur
+          </Link>
+        </div>
       </header>
 
       {/* Mobile top bar */}
       <header className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-indigo-950/95 backdrop-blur border-b border-white/5">
-        <span className="w-8" />
-        <Link href="/" className="font-display text-xl font-semibold text-white">
-          E-<span className="text-neon-400 neon-text">Mboppi</span>
+        <Link href="/vendeur/connexion" aria-label="Connexion" className="text-white/80">
+          <LogIn size={20} className={pathname === "/vendeur/connexion" ? "text-neon-400" : ""} />
+        </Link>
+        <Link href="/" className="font-display text-xl font-semibold tracking-tight text-white logo-glow-pulse">
+          <span className="italic">E</span>
+          <span className="text-neon-400">-</span>
+          <span className="logo-gradient">Mboppi</span>
         </Link>
         <Link href="/favoris" aria-label="Favoris" className="text-white/80">
           <Heart size={20} className={pathname === "/favoris" ? "fill-piment-500 text-piment-500" : ""} />

@@ -8,6 +8,7 @@ const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-fraunces",
   weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
 });
 const manrope = Manrope({
   subsets: ["latin"],
