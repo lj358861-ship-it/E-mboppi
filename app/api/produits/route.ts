@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     include: {
       vendeur: { select: { nomBoutique: true, utilisateur: { select: { whatsapp: true } } } },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ boost: "desc" }, { createdAt: "desc" }],
     take: 60,
   });
 

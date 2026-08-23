@@ -85,6 +85,8 @@ model Produit {
   videoUrl     String?
   imageUrl     String?
   visible      Boolean  @default(true)
+  boost        Boolean  @default(false)
+  boostedAt    DateTime?
   createdAt    DateTime @default(now())
 
   favoris      Favori[]
