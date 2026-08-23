@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --tag-notch: 10px;
+}
+
+body {
+  background-color: #FAFAF8;
+  color: #16274F;
+}
+
+/* Motif "étiquette de marché" — coin découpé façon ticket de prix */
+.price-tag {
+  position: relative;
+  clip-path: polygon(
+    0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px)
+  );
+}
+
+.tag-hole {
+  position: relative;
+}
+.tag-hole::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.15);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+  .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+}
