@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Heart, MessageCircle } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
 
@@ -11,6 +12,7 @@ type Props = {
   prix: number;
   videoUrl?: string | null;
   imageUrl?: string | null;
+  vendeurId: string;
   nomBoutique: string;
   whatsappVendeur: string;
   estFavori?: boolean;
@@ -22,14 +24,16 @@ export default function CarteProduitVideo({
   prix,
   videoUrl,
   imageUrl,
+  vendeurId,
   nomBoutique,
   whatsappVendeur,
   estFavori = false,
 }: Props) {
   const [favori, setFavori] = useState(estFavori);
+  const router = useRouter();
 
   async function basculerFavori(e: React.MouseEvent) {
-    e.preventDefault();
+    e.stopPropagation();
     setFavori((f) => !f);
     await fetch("/api/favoris", {
       method: "POST",
@@ -39,9 +43,12 @@ export default function CarteProduitVideo({
   }
 
   return (
-    <Link
-      href={`/produit/${id}`}
-      className="group relative flex-shrink-0 w-[220px] md:w-[260px] rounded-2xl overflow-hidden bg-indigo-950 aspect-[9/16] snap-start"
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={() => router.push(`/produit/${id}`)}
+      onKeyDown={(e) => e.key === "Enter" && router.push(`/produit/${id}`)}
+      className="group relative flex-shrink-0 w-[220px] md:w-[260px] rounded-2xl overflow-hidden bg-indigo-950 aspect-[9/16] snap-start cursor-pointer"
     >
       {videoUrl ? (
         <video
@@ -70,7 +77,13 @@ export default function CarteProduitVideo({
       </button>
 
       <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-        <p className="text-xs opacity-80 mb-0.5">{nomBoutique}</p>
+        <Link
+          href={`/vendeur/${vendeurId}`}
+          onClick={(e) => e.stopPropagation()}
+          className="text-xs opacity-80 mb-0.5 inline-block hover:underline hover:opacity-100"
+        >
+          {nomBoutique}
+        </Link>
         <p className="font-medium text-sm leading-snug line-clamp-2 mb-1">{titre}</p>
         <div className="flex items-center justify-between">
           <span className="font-mono text-mango-400 font-semibold text-sm">
@@ -87,6 +100,6 @@ export default function CarteProduitVideo({
           </a>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

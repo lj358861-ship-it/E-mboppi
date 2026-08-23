@@ -3,8 +3,10 @@ import { lireSession } from "@/lib/auth";
 import { joursRestants, MONTANT_ABONNEMENT } from "@/lib/abonnement";
 import { lienNotifierPaiement } from "@/lib/whatsapp";
 import { redirect } from "next/navigation";
-import { AlertTriangle, CheckCircle2, MessageCircle } from "lucide-react";
+import Link from "next/link";
+import { AlertTriangle, CheckCircle2, MessageCircle, Store } from "lucide-react";
 import ProduitForm from "./ProduitForm";
+import ProfilBoutique from "./ProfilBoutique";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +30,16 @@ export default async function DashboardVendeur() {
 
   return (
     <div className="px-4 md:px-8 py-6 max-w-3xl mx-auto">
-      <h1 className="font-display text-2xl font-semibold text-indigo-900 mb-1">
-        {vendeur.nomBoutique}
-      </h1>
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="font-display text-2xl font-semibold text-indigo-900">{vendeur.nomBoutique}</h1>
+        <Link
+          href={`/vendeur/${vendeur.id}`}
+          target="_blank"
+          className="flex items-center gap-1.5 text-xs font-medium text-indigo-900/60 hover:text-indigo-900"
+        >
+          <Store size={14} /> Voir ma boutique publique
+        </Link>
+      </div>
       <p className="text-sm text-indigo-900/60 mb-6">Tableau de bord vendeur</p>
 
       {actif ? (
@@ -66,6 +75,15 @@ export default async function DashboardVendeur() {
         </div>
       )}
 
+      <div className="mb-6">
+        <ProfilBoutique
+          nomBoutique={vendeur.nomBoutique}
+          description={vendeur.description}
+          ville={vendeur.ville}
+          logoUrl={vendeur.logoUrl}
+        />
+      </div>
+
       <div className="grid md:grid-cols-2 gap-6">
         <ProduitForm />
 
@@ -77,9 +95,17 @@ export default async function DashboardVendeur() {
             {vendeur.produits.map((p: (typeof vendeur.produits)[number]) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between bg-white border border-stone-200 rounded-xl px-4 py-3"
+                className="flex items-center gap-3 bg-white border border-stone-200 rounded-xl px-4 py-3"
               >
-                <div>
+                <div className="w-12 h-12 rounded-lg overflow-hidden bg-stone-100 flex-shrink-0">
+                  {p.photos[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.photos[0]} alt={p.titre} className="w-full h-full object-cover" />
+                  ) : p.videoUrl ? (
+                    <video src={p.videoUrl} muted className="w-full h-full object-cover" />
+                  ) : null}
+                </div>
+                <div className="flex-1">
                   <p className="text-sm font-medium text-indigo-900">{p.titre}</p>
                   <p className="text-xs text-indigo-900/50">{p.prix.toLocaleString("fr-FR")} F</p>
                 </div>

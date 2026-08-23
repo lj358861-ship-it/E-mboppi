@@ -10,7 +10,7 @@ export const metadata = {
 async function recupererProduitsVideo() {
   return prisma.produit.findMany({
     where: { visible: true, videoUrl: { not: null } },
-    include: { vendeur: { include: { utilisateur: true } } },
+    include: { vendeur: { select: { id: true, nomBoutique: true, utilisateur: { select: { whatsapp: true } } } } },
     orderBy: { createdAt: "desc" },
     take: 40,
   });

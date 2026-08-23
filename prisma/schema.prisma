@@ -47,6 +47,7 @@ model Vendeur {
   description     String?
   ville           String?
   logoUrl         String?
+  logoPublicId    String?
   createdAt       DateTime @default(now())
 
   produits        Produit[]
@@ -82,8 +83,16 @@ model Produit {
   description  String?
   prix         Int
   categorie    String?
-  videoUrl     String?
-  imageUrl     String?
+
+  // Jusqu'à 5 photos par article (Cloudinary). photosPublicIds sert à
+  // supprimer proprement les fichiers sur Cloudinary quand l'article change.
+  photos           String[] @default([])
+  photosPublicIds  String[] @default([])
+
+  // Une seule vidéo courte ("reel") par article
+  videoUrl         String?
+  videoPublicId    String?
+
   visible      Boolean  @default(true)
   boost        Boolean  @default(false)
   boostedAt    DateTime?
@@ -93,6 +102,7 @@ model Produit {
 
   @@index([vendeurId])
   @@index([categorie])
+  @@index([prix])
 }
 
 model Message {

@@ -10,7 +10,7 @@ type Produit = {
   titre: string;
   prix: number;
   videoUrl: string | null;
-  vendeur: { nomBoutique: string; utilisateur: { whatsapp: string } };
+  vendeur: { id: string; nomBoutique: string; utilisateur: { whatsapp: string } };
 };
 
 export default function FeedVideosCourtes({ produits }: { produits: Produit[] }) {
@@ -98,18 +98,20 @@ export default function FeedVideosCourtes({ produits }: { produits: Produit[] })
           <BoutonsAction produit={p} />
 
           {/* Infos produit */}
-          <Link
-            href={`/produit/${p.id}`}
-            className="absolute bottom-6 left-4 right-20 text-white"
-          >
-            <p className="flex items-center gap-1.5 text-xs opacity-90 mb-1">
+          <div className="absolute bottom-6 left-4 right-20 text-white">
+            <Link
+              href={`/vendeur/${p.vendeur.id}`}
+              className="flex items-center gap-1.5 text-xs opacity-90 mb-1 w-fit hover:underline"
+            >
               <Store size={13} /> {p.vendeur.nomBoutique}
-            </p>
-            <p className="font-medium text-base leading-snug line-clamp-2 mb-1.5">{p.titre}</p>
-            <span className="font-mono text-mango-400 font-semibold text-sm">
-              {p.prix.toLocaleString("fr-FR")} F
-            </span>
-          </Link>
+            </Link>
+            <Link href={`/produit/${p.id}`}>
+              <p className="font-medium text-base leading-snug line-clamp-2 mb-1.5">{p.titre}</p>
+              <span className="font-mono text-mango-400 font-semibold text-sm">
+                {p.prix.toLocaleString("fr-FR")} F
+              </span>
+            </Link>
+          </div>
         </div>
       ))}
     </div>

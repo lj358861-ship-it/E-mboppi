@@ -10,8 +10,8 @@ type Favori = {
     titre: string;
     prix: number;
     videoUrl: string | null;
-    imageUrl: string | null;
-    vendeur: { nomBoutique: string; utilisateur?: { whatsapp: string }; };
+    photos: string[];
+    vendeur: { id: string; nomBoutique: string; utilisateur?: { whatsapp: string } };
   };
 };
 
@@ -46,7 +46,8 @@ export default function Favoris() {
             titre={produit.titre}
             prix={produit.prix}
             videoUrl={produit.videoUrl}
-            imageUrl={produit.imageUrl}
+            imageUrl={produit.photos[0] || null}
+            vendeurId={produit.vendeur.id}
             nomBoutique={produit.vendeur.nomBoutique}
             whatsappVendeur={produit.vendeur.utilisateur?.whatsapp || ""}
             estFavori

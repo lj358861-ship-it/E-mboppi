@@ -9,7 +9,9 @@ export const dynamic = "force-dynamic";
 async function recupererProduitsParCategorie() {
   const produits = await prisma.produit.findMany({
     where: { visible: true },
-    include: { vendeur: { include: { utilisateur: true } } },
+    include: {
+      vendeur: { select: { id: true, nomBoutique: true, utilisateur: { select: { whatsapp: true } } } },
+    },
     orderBy: { createdAt: "desc" },
     take: 100,
   });
@@ -63,7 +65,8 @@ export default async function Accueil() {
                 titre={p.titre}
                 prix={p.prix}
                 videoUrl={p.videoUrl}
-                imageUrl={p.imageUrl}
+                imageUrl={p.photos[0] || null}
+                vendeurId={p.vendeur.id}
                 nomBoutique={p.vendeur.nomBoutique}
                 whatsappVendeur={p.vendeur.utilisateur.whatsapp}
               />

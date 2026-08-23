@@ -8,7 +8,11 @@ export async function GET() {
 
   const favoris = await prisma.favori.findMany({
     where: { clientId: session.id },
-    include: { produit: { include: { vendeur: true } } },
+    include: {
+      produit: {
+        include: { vendeur: { select: { id: true, nomBoutique: true, utilisateur: { select: { whatsapp: true } } } } },
+      },
+    },
   });
   return NextResponse.json({ favoris });
 }
