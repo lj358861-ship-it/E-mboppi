@@ -6,7 +6,7 @@
  * ils ouvrent WhatsApp avec un message pré-rempli, sans aucune clé API.
  */
 
-const ADMIN_WHATSAPP = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || "237600000000";
+const ADMIN_WHATSAPP = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || "237652401831";
 
 function nettoyerNumero(numero: string) {
   return numero.replace(/[^\d]/g, "");

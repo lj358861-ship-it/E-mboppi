@@ -9,10 +9,27 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Palette recolorée en violet néon — les mêmes noms de classe
+        // (indigo-900, etc.) sont utilisés partout dans le site, donc ce
+        // changement de teinte suffit à transformer toute l'identité visuelle.
         indigo: {
-          950: "#0F1E3D",
-          900: "#16274F",
-          800: "#1D3461",
+          950: "#120A2E",
+          900: "#1E0A45",
+          800: "#3B1373",
+        },
+        // Nouvel accent néon (violet vif → magenta), pour les halos,
+        // boutons, dégradés et éléments "vidéos courtes".
+        neon: {
+          300: "#E9D5FF",
+          400: "#C084FC",
+          500: "#A855F7",
+          600: "#9333EA",
+          700: "#7E22CE",
+        },
+        neonpink: {
+          400: "#F472F0",
+          500: "#E930FF",
+          600: "#C026D3",
         },
         mango: {
           400: "#F5B94C",
@@ -42,6 +59,43 @@ const config: Config = {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+        "gradient-neon":
+          "linear-gradient(135deg, #7E22CE 0%, #A855F7 45%, #E930FF 100%)",
+      },
+      keyframes: {
+        fadeInUp: {
+          "0%": { opacity: "0", transform: "translateY(16px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        glowPulse: {
+          "0%, 100%": {
+            boxShadow:
+              "0 0 12px rgba(168,85,247,0.55), 0 0 28px rgba(233,48,255,0.28)",
+          },
+          "50%": {
+            boxShadow:
+              "0 0 22px rgba(168,85,247,0.85), 0 0 48px rgba(233,48,255,0.5)",
+          },
+        },
+        gradientShift: {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
+        floatSlow: {
+          "0%, 100%": { transform: "translateY(0) translateX(0)" },
+          "50%": { transform: "translateY(-14px) translateX(8px)" },
+        },
+        marqueeSlide: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
+      },
+      animation: {
+        "fade-in-up": "fadeInUp 0.7s ease-out both",
+        "glow-pulse": "glowPulse 2.6s ease-in-out infinite",
+        "gradient-shift": "gradientShift 6s ease infinite",
+        "float-slow": "floatSlow 6s ease-in-out infinite",
+        "marquee-slide": "marqueeSlide 18s linear infinite",
       },
     },
   },

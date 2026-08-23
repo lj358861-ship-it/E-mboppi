@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Manrope, IBM_Plex_Mono } from "next/font/google";
 import Navigation from "@/components/Navigation";
+import MainWrapper from "@/components/MainWrapper";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -34,7 +35,7 @@ export default function RootLayout({
     <html lang="fr">
       <body className={`${fraunces.variable} ${manrope.variable} ${mono.variable} font-body bg-stone-50 text-indigo-950`}>
         <Navigation />
-        <main className="pb-20 md:pb-0">{children}</main>
+        <MainWrapper>{children}</MainWrapper>
       </body>
     </html>
   );

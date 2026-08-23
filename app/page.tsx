@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
+import PromoCarousel from "@/components/PromoCarousel";
 import Link from "next/link";
 import { Store } from "lucide-react";
 
@@ -34,20 +35,9 @@ export default async function Accueil() {
 
   return (
     <div>
-      {/* Bandeau signature — étiquette de marché géante */}
+      {/* Carrousel promotionnel néon animé */}
       <section className="px-4 md:px-8 pt-6 pb-4">
-        <div className="price-tag bg-indigo-900 text-white px-6 py-8 md:px-12 md:py-14 rounded-tr-2xl">
-          <p className="font-mono text-mango-400 text-xs tracking-widest uppercase mb-2">
-            Kmer Vision présente
-          </p>
-          <h1 className="font-display text-3xl md:text-5xl font-semibold max-w-xl leading-tight">
-            Le marché Mboppi, à portée de main.
-          </h1>
-          <p className="mt-3 text-stone-200 max-w-md text-sm md:text-base">
-            Parcourez les stands en vidéo, trouvez l&apos;article qu&apos;il vous faut,
-            et écrivez directement au vendeur sur WhatsApp.
-          </p>
-        </div>
+        <PromoCarousel />
       </section>
 
       {aucunProduit && (
@@ -57,10 +47,11 @@ export default async function Accueil() {
         </div>
       )}
 
-      {groupes.map(([categorie, produits]) => (
-        <section key={categorie} className="mb-8">
+      {groupes.map(([categorie, produits], i) => (
+        <section key={categorie} id={i === 0 ? "produits" : undefined} className="mb-8">
           <div className="flex items-center justify-between px-4 md:px-8 mb-3">
-            <h2 className="font-display text-lg md:text-xl font-semibold text-indigo-900">
+            <h2 className="font-display text-lg md:text-xl font-semibold text-indigo-900 flex items-center gap-2">
+              <span className="w-1.5 h-4 rounded-full bg-gradient-neon" />
               {categorie}
             </h2>
           </div>
@@ -82,10 +73,7 @@ export default async function Accueil() {
       ))}
 
       <div className="px-4 md:px-8 py-10 text-center">
-        <Link
-          href="/a-propos#devenir-vendeur"
-          className="inline-flex items-center gap-2 bg-piment-500 hover:bg-piment-600 transition-colors text-white px-5 py-3 rounded-full font-medium text-sm"
-        >
+        <Link href="/a-propos#devenir-vendeur" className="btn-neon px-5 py-3 font-medium text-sm">
           <Store size={16} /> Vous êtes vendeur au marché Mboppi ? Ouvrez votre stand ici
         </Link>
       </div>
