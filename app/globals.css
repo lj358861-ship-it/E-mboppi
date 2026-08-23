@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --tag-notch: 10px;
+}
+
+body {
+  background-color: #FAFAF8;
+  color: #16274F;
+}
+
+/* Motif "étiquette de marché" — coin découpé façon ticket de prix */
+.price-tag {
+  position: relative;
+  clip-path: polygon(
+    0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px)
+  );
+}
+
+.tag-hole {
+  position: relative;
+}
+.tag-hole::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.15);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+  .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* ===== Thème néon violet ===== */
+
+.bg-gradient-neon {
+  background-size: 200% 200%;
+}
+
+/* Texte qui brille légèrement, façon enseigne néon */
+.neon-text {
+  text-shadow:
+    0 0 10px rgba(168, 85, 247, 0.85),
+    0 0 24px rgba(233, 48, 255, 0.45);
+}
+
+/* Bouton principal néon dégradé violet → magenta, avec halo pulsé */
+.btn-neon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fff;
+  background: linear-gradient(135deg, #7E22CE, #A855F7 55%, #E930FF);
+  background-size: 200% 200%;
+  border-radius: 9999px;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.5), 0 0 32px rgba(233, 48, 255, 0.25);
+}
+.btn-neon:hover {
+  transform: translateY(-1px) scale(1.02);
+  background-position: 100% 50%;
+}
+
+/* Contour lumineux réutilisable (cartes, inputs au focus, badges) */
+.neon-border {
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.12) inset, 0 0 18px rgba(168, 85, 247, 0.25);
+}
+
+/* Halos flous décoratifs (blobs) utilisés en fond du carrousel / héro */
+.neon-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Pastille "live/vidéo" néon, utilisée sur le flux de vidéos courtes */
+.neon-dot {
+  box-shadow: 0 0 8px rgba(233, 48, 255, 0.9), 0 0 16px rgba(168, 85, 247, 0.6);
+}
+
+/* ===== Logotype E-Mboppi ===== */
+
+/* "Mboppi" en dégradé violet → magenta, animé lentement, façon enseigne premium */
+.logo-gradient {
+  background: linear-gradient(120deg, #7E22CE 0%, #A855F7 40%, #E930FF 75%, #C084FC 100%);
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: logoShift 6s ease-in-out infinite;
+}
+
+@keyframes logoShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Halo léger et chic, adapté aux fonds clairs (header desktop) */
+.logo-glow-soft {
+  text-shadow: 0 0 14px rgba(168, 85, 247, 0.28), 0 1px 1px rgba(30, 10, 69, 0.06);
+}
+
+/* Halo néon plus prononcé et pulsé, adapté aux fonds sombres (header mobile) */
+.logo-glow-pulse {
+  animation: logoGlowPulse 3.2s ease-in-out infinite;
+}
+
+@keyframes logoGlowPulse {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(168, 85, 247, 0.55), 0 0 24px rgba(233, 48, 255, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 16px rgba(168, 85, 247, 0.9), 0 0 38px rgba(233, 48, 255, 0.55);
+  }
+}
