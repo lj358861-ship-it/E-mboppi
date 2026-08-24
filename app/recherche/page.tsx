@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
 import { CATEGORIES } from "@/lib/categories";
+import { StatutStock } from "@/lib/stock";
 
 type Produit = {
   id: string;
@@ -11,6 +12,7 @@ type Produit = {
   prix: number;
   videoUrl: string | null;
   photos: string[];
+  statutStock: StatutStock;
   vendeur: { id: string; nomBoutique: string; logoUrl: string | null; utilisateur: { whatsapp: string } };
 };
 

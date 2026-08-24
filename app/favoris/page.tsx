@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
 import { Heart } from "lucide-react";
+import { StatutStock } from "@/lib/stock";
 
 type Favori = {
   produit: {
@@ -11,6 +12,7 @@ type Favori = {
     prix: number;
     videoUrl: string | null;
     photos: string[];
+    statutStock: StatutStock;
     vendeur: { id: string; nomBoutique: string; utilisateur?: { whatsapp: string } };
   };
 };
