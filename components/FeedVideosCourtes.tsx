@@ -4,12 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Heart, MessageCircle, Volume2, VolumeX, Store } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
+import { classesBadgeStock, labelStatutStock, StatutStock } from "@/lib/stock";
 
 type Produit = {
   id: string;
   titre: string;
   prix: number;
   videoUrl: string | null;
+  statutStock: StatutStock;
   vendeur: { id: string; nomBoutique: string; utilisateur: { whatsapp: string } };
 };
 
@@ -110,6 +112,13 @@ export default function FeedVideosCourtes({ produits }: { produits: Produit[] })
               <span className="font-mono text-mango-400 font-semibold text-sm">
                 {p.prix.toLocaleString("fr-FR")} F
               </span>
+              {p.statutStock !== "DISPONIBLE" && (
+                <span
+                  className={`ml-2 text-[10px] px-2 py-0.5 rounded-full font-semibold ${classesBadgeStock(p.statutStock)}`}
+                >
+                  {labelStatutStock(p.statutStock)}
+                </span>
+              )}
             </Link>
           </div>
         </div>

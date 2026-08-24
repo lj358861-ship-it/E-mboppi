@@ -129,6 +129,7 @@ export default function Recherche() {
             vendeurId={p.vendeur.id}
             nomBoutique={p.vendeur.nomBoutique}
             whatsappVendeur={p.vendeur.utilisateur.whatsapp}
+            statutStock={p.statutStock}
           />
         ))}
       </div>

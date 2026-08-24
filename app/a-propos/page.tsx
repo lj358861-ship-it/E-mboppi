@@ -35,6 +35,44 @@ export default function APropos() {
         <Stat chiffre="Douala" label="Marché Mboppi" />
       </section>
 
+      <section className="mb-10 bg-indigo-950 rounded-2xl p-6 md:p-8 relative overflow-hidden">
+        <div className="neon-blob bg-neon-600 w-56 h-56 -top-16 -right-16 opacity-40" />
+        <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/kmer-vision-logo.png"
+            alt="Kmer Vision"
+            className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl object-cover flex-shrink-0 neon-border"
+          />
+          <div>
+            <p className="font-mono text-neon-400 text-xs tracking-widest uppercase mb-1">
+              La société derrière E-Mboppi
+            </p>
+            <h2 className="font-display text-2xl font-semibold text-white mb-2">Kmer Vision</h2>
+            <p className="text-sm text-neon-300/50 uppercase tracking-[0.15em] mb-3">
+              Build · Code · Create · Transform
+            </p>
+            <p className="text-stone-200/90 leading-relaxed text-sm mb-4">
+              Kmer Vision est une agence camerounaise spécialisée dans le développement web et
+              le marketing digital. Au-delà d&apos;E-Mboppi, nous concevons des sites vitrines,
+              des applications web sur mesure, des boutiques en ligne et des outils métier pour
+              les entreprises et entrepreneurs qui veulent exister sérieusement sur internet.
+            </p>
+            <div className="grid sm:grid-cols-3 gap-3 mb-4">
+              <ServiceKmer titre="Développement web" description="Sites vitrines, applications sur mesure, plateformes e-commerce." />
+              <ServiceKmer titre="Marketing digital" description="Visibilité, réseaux sociaux, campagnes et stratégie de contenu." />
+              <ServiceKmer titre="Accompagnement" description="Conseil et suivi pour transformer une idée en produit réel." />
+            </div>
+            <a
+              href="/api/whatsapp-admin?nom=Contact%20Kmer%20Vision"
+              className="inline-flex items-center gap-2 btn-neon px-4 py-2 text-sm font-medium"
+            >
+              Discuter d&apos;un projet avec Kmer Vision
+            </a>
+          </div>
+        </div>
+      </section>
+
       <section id="devenir-vendeur" className="scroll-mt-20">
         <h2 className="font-display text-2xl font-semibold text-indigo-900 mb-2">
           Devenir vendeur sur E-Mboppi
@@ -45,6 +83,15 @@ export default function APropos() {
         </p>
         <AProposClient />
       </section>
+    </div>
+  );
+}
+
+function ServiceKmer({ titre, description }: { titre: string; description: string }) {
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+      <p className="text-sm font-semibold text-white mb-1">{titre}</p>
+      <p className="text-xs text-neon-300/60 leading-relaxed">{description}</p>
     </div>
   );
 }

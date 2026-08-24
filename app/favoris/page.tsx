@@ -50,6 +50,7 @@ export default function Favoris() {
             vendeurId={produit.vendeur.id}
             nomBoutique={produit.vendeur.nomBoutique}
             whatsappVendeur={produit.vendeur.utilisateur?.whatsapp || ""}
+            statutStock={produit.statutStock}
             estFavori
           />
         ))}

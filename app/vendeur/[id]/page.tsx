@@ -72,6 +72,7 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
               vendeurId={vendeur.id}
               nomBoutique={vendeur.nomBoutique}
               whatsappVendeur={vendeur.utilisateur.whatsapp}
+            statutStock={p.statutStock}
             />
           ))}
         </div>

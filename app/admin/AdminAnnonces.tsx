@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Zap, ZapOff, Trash2, EyeOff, Eye } from "lucide-react";
+import { classesBadgeStock, labelStatutStock, StatutStock } from "@/lib/stock";
 
 type Produit = {
   id: string;
@@ -9,6 +10,7 @@ type Produit = {
   prix: number;
   visible: boolean;
   boost: boolean;
+  statutStock: StatutStock;
   vendeur: { nomBoutique: string };
 };
 
@@ -45,10 +47,20 @@ export default function AdminAnnonces({ onChangement }: { onChangement: () => vo
   async function supprimer(p: Produit) {
     if (!confirm(`Supprimer définitivement l'annonce "${p.titre}" ?`)) return;
     setEnCours(p.id);
-    await fetch(`/api/produits/${p.id}`, { method: "DELETE" });
-    setEnCours(null);
-    charger();
-    onChangement();
+    try {
+      const res = await fetch(`/api/produits/${p.id}`, { method: "DELETE" });
+      const resultat = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(resultat.erreur || "Échec de la suppression de l'annonce. Réessayez.");
+        return;
+      }
+      await charger();
+      onChangement();
+    } catch {
+      alert("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
+    } finally {
+      setEnCours(null);
+    }
   }
 
   if (produits === null) return <p className="text-sm text-neon-300/50">Chargement…</p>;
@@ -72,6 +84,11 @@ export default function AdminAnnonces({ onChangement }: { onChangement: () => vo
               <p className="font-medium text-white">{p.titre}</p>
               <p className="text-xs text-neon-300/60 flex items-center gap-1.5">
                 {p.vendeur.nomBoutique} · {formatFCFA(p.prix)}
+                {p.statutStock !== "DISPONIBLE" && (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${classesBadgeStock(p.statutStock)}`}>
+                    {labelStatutStock(p.statutStock)}
+                  </span>
+                )}
                 {!p.visible && (
                   <span className="flex items-center gap-0.5 text-piment-500">
                     <EyeOff size={11} /> masquée

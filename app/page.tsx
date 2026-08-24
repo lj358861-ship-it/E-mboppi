@@ -69,6 +69,7 @@ export default async function Accueil() {
                 vendeurId={p.vendeur.id}
                 nomBoutique={p.vendeur.nomBoutique}
                 whatsappVendeur={p.vendeur.utilisateur.whatsapp}
+            statutStock={p.statutStock}
               />
             ))}
           </div>

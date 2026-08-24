@@ -2,24 +2,46 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ImagePlus, Video } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
+import { OPTIONS_STATUT_STOCK, StatutStock } from "@/lib/stock";
 import UploadPhotos, { PhotoUploadee } from "@/components/UploadPhotos";
 import UploadVideo, { VideoUploadee } from "@/components/UploadVideo";
 
+type TypeAnnonce = "photo" | "video";
+
 export default function ProduitForm() {
-  const [form, setForm] = useState({ titre: "", prix: "", categorie: "", description: "" });
+  const [typeAnnonce, setTypeAnnonce] = useState<TypeAnnonce>("photo");
+  const [form, setForm] = useState({
+    titre: "",
+    prix: "",
+    categorie: "",
+    description: "",
+    statutStock: "DISPONIBLE" as StatutStock,
+  });
   const [photos, setPhotos] = useState<PhotoUploadee[]>([]);
   const [video, setVideo] = useState<VideoUploadee>(null);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const router = useRouter();
 
+  function changerType(t: TypeAnnonce) {
+    setTypeAnnonce(t);
+    // On vide le média du type non sélectionné pour rester cohérent avec le choix.
+    if (t === "photo") setVideo(null);
+    if (t === "video") setPhotos([]);
+  }
+
   async function soumettre(e: React.FormEvent) {
     e.preventDefault();
     setErreur(null);
 
-    if (photos.length === 0 && !video) {
-      setErreur("Ajoutez au moins une photo ou une vidéo courte.");
+    if (typeAnnonce === "photo" && photos.length === 0) {
+      setErreur("Ajoutez au moins une photo.");
+      return;
+    }
+    if (typeAnnonce === "video" && !video) {
+      setErreur("Ajoutez une vidéo courte.");
       return;
     }
 
@@ -44,7 +66,7 @@ export default function ProduitForm() {
       return;
     }
 
-    setForm({ titre: "", prix: "", categorie: "", description: "" });
+    setForm({ titre: "", prix: "", categorie: "", description: "", statutStock: "DISPONIBLE" });
     setPhotos([]);
     setVideo(null);
     router.refresh();
@@ -53,6 +75,35 @@ export default function ProduitForm() {
   return (
     <form onSubmit={soumettre} className="grid gap-4 bg-white border border-stone-200 rounded-2xl p-5">
       <p className="font-display text-lg font-semibold text-indigo-900">Ajouter un article</p>
+
+      {/* Choix du type d'annonce : soit des photos, soit une vidéo courte */}
+      <div>
+        <p className="text-xs font-medium text-indigo-900/70 mb-2">Type d&apos;annonce</p>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => changerType("photo")}
+            className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium border transition-colors ${
+              typeAnnonce === "photo"
+                ? "bg-indigo-900 border-indigo-900 text-white"
+                : "bg-stone-50 border-stone-200 text-indigo-900/60 hover:border-indigo-800"
+            }`}
+          >
+            <ImagePlus size={16} /> Photos
+          </button>
+          <button
+            type="button"
+            onClick={() => changerType("video")}
+            className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium border transition-colors ${
+              typeAnnonce === "video"
+                ? "bg-indigo-900 border-indigo-900 text-white"
+                : "bg-stone-50 border-stone-200 text-indigo-900/60 hover:border-indigo-800"
+            }`}
+          >
+            <Video size={16} /> Vidéo courte
+          </button>
+        </div>
+      </div>
 
       <input
         required
@@ -89,6 +140,18 @@ export default function ProduitForm() {
         </select>
       </div>
 
+      <select
+        value={form.statutStock}
+        onChange={(e) => setForm({ ...form, statutStock: e.target.value as StatutStock })}
+        className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
+      >
+        {OPTIONS_STATUT_STOCK.map((o) => (
+          <option key={o.valeur} value={o.valeur}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+
       <textarea
         placeholder="Description"
         value={form.description}
@@ -97,8 +160,11 @@ export default function ProduitForm() {
         className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
       />
 
-      <UploadPhotos valeur={photos} onChange={setPhotos} />
-      <UploadVideo valeur={video} onChange={setVideo} />
+      {typeAnnonce === "photo" ? (
+        <UploadPhotos valeur={photos} onChange={setPhotos} />
+      ) : (
+        <UploadVideo valeur={video} onChange={setVideo} />
+      )}
 
       {erreur && <p className="text-xs text-piment-500">{erreur}</p>}
 

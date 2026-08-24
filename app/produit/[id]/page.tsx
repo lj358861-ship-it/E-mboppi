@@ -4,6 +4,7 @@ import { lienContacterVendeur } from "@/lib/whatsapp";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MessageCircle, Store, Tag } from "lucide-react";
+import { classesBadgeStock, labelStatutStock } from "@/lib/stock";
 import EcrireAuVendeur from "./EcrireAuVendeur";
 import GalerieProduit from "./GalerieProduit";
 
@@ -48,6 +49,11 @@ export default async function PageProduit({ params }: { params: { id: string } }
           {produit.categorie && (
             <span className="flex items-center gap-1 bg-stone-100 text-indigo-900/60 text-xs px-2.5 py-1 rounded-full">
               <Tag size={12} /> {produit.categorie}
+            </span>
+          )}
+          {produit.statutStock !== "DISPONIBLE" && (
+            <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${classesBadgeStock(produit.statutStock)}`}>
+              {labelStatutStock(produit.statutStock)}
             </span>
           )}
         </div>

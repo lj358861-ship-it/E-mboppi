@@ -7,6 +7,7 @@ import Link from "next/link";
 import { AlertTriangle, CheckCircle2, MessageCircle, Store } from "lucide-react";
 import ProduitForm from "./ProduitForm";
 import ProfilBoutique from "./ProfilBoutique";
+import MesArticles from "./MesArticles";
 
 export const dynamic = "force-dynamic";
 
@@ -91,37 +92,7 @@ export default async function DashboardVendeur() {
           <p className="font-display text-lg font-semibold text-indigo-900 mb-3">
             Mes articles ({vendeur.produits.length})
           </p>
-          <div className="space-y-2">
-            {vendeur.produits.map((p: (typeof vendeur.produits)[number]) => (
-              <div
-                key={p.id}
-                className="flex items-center gap-3 bg-white border border-stone-200 rounded-xl px-4 py-3"
-              >
-                <div className="w-12 h-12 rounded-lg overflow-hidden bg-stone-100 flex-shrink-0">
-                  {p.photos[0] ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.photos[0]} alt={p.titre} className="w-full h-full object-cover" />
-                  ) : p.videoUrl ? (
-                    <video src={p.videoUrl} muted className="w-full h-full object-cover" />
-                  ) : null}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-indigo-900">{p.titre}</p>
-                  <p className="text-xs text-indigo-900/50">{p.prix.toLocaleString("fr-FR")} F</p>
-                </div>
-                <span
-                  className={`text-xs px-2 py-1 rounded-full font-medium ${
-                    p.visible ? "bg-feuille-500/15 text-feuille-600" : "bg-stone-200 text-indigo-900/50"
-                  }`}
-                >
-                  {p.visible ? "Visible" : "Masqué"}
-                </span>
-              </div>
-            ))}
-            {vendeur.produits.length === 0 && (
-              <p className="text-sm text-indigo-900/50">Aucun article publié pour le moment.</p>
-            )}
-          </div>
+          <MesArticles produits={vendeur.produits} />
         </div>
       </div>
     </div>

@@ -22,6 +22,12 @@ enum StatutAbonnement {
   EN_ATTENTE_VALIDATION
 }
 
+enum StatutStock {
+  DISPONIBLE
+  STOCK_LIMITE
+  RUPTURE_STOCK
+}
+
 model Utilisateur {
   id             String          @id @default(cuid())
   nom            String
@@ -92,6 +98,8 @@ model Produit {
   // Une seule vidéo courte ("reel") par article
   videoUrl         String?
   videoPublicId    String?
+
+  statutStock  StatutStock @default(DISPONIBLE)
 
   visible      Boolean  @default(true)
   boost        Boolean  @default(false)

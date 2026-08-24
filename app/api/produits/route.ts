@@ -67,6 +67,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const STATUTS_STOCK_VALIDES = ["DISPONIBLE", "STOCK_LIMITE", "RUPTURE_STOCK"];
+  const statutStock = STATUTS_STOCK_VALIDES.includes(body.statutStock) ? body.statutStock : "DISPONIBLE";
+
   const produit = await prisma.produit.create({
     data: {
       vendeurId: vendeur.id,
@@ -78,6 +81,7 @@ export async function POST(req: NextRequest) {
       photosPublicIds,
       videoUrl: body.videoUrl || null,
       videoPublicId: body.videoPublicId || null,
+      statutStock,
       visible: abonnementActif,
     },
   });
