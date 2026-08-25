@@ -71,22 +71,23 @@ export default function RayonPromo() {
 
       <div className="flex gap-3 overflow-x-auto scrollbar-none px-4 md:px-8 pb-2 snap-x">
         {produits.map((p) => (
-          <CarteProduitVideo
-            key={p.id}
-            id={p.id}
-            titre={p.titre}
-            prix={p.prix}
-            videoUrl={p.videoUrl}
-            imageUrl={p.photos[0] || null}
-            vendeurId={p.vendeur.id}
-            nomBoutique={p.vendeur.nomBoutique}
-            villeVendeur={p.vendeur.ville}
-            whatsappVendeur={p.vendeur.utilisateur.whatsapp}
-            statutStock={p.statutStock}
-            enPromo={p.enPromo}
-            estFavori={p.estFavori}
-            enFeu
-          />
+          <div key={p.id} className="w-[220px] md:w-[260px] flex-shrink-0 snap-start">
+            <CarteProduitVideo
+              id={p.id}
+              titre={p.titre}
+              prix={p.prix}
+              videoUrl={p.videoUrl}
+              imageUrl={p.photos[0] || null}
+              vendeurId={p.vendeur.id}
+              nomBoutique={p.vendeur.nomBoutique}
+              villeVendeur={p.vendeur.ville}
+              whatsappVendeur={p.vendeur.utilisateur.whatsapp}
+              statutStock={p.statutStock}
+              enPromo={p.enPromo}
+              estFavori={p.estFavori}
+              enFeu
+            />
+          </div>
         ))}
       </div>
     </section>

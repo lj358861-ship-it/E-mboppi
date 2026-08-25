@@ -52,6 +52,22 @@ body {
   .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
+/*
+ * Verrou anti-zoom clavier mobile (iOS Safari) — quand un champ de saisie a
+ * une taille de police < 16px, Safari zoome automatiquement la page entière
+ * au focus, ce qui "dérègle" la mise en page tant que le clavier est ouvert
+ * (barre du bas flottante, contenu décalé). On force 16px minimum sur TOUS
+ * les champs, quelle que soit la classe Tailwind posée dessus, pour empêcher
+ * ce zoom une fois pour toutes.
+ */
+@media screen and (max-width: 820px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 /* ===== Thème néon violet ===== */
 
 .bg-gradient-neon {

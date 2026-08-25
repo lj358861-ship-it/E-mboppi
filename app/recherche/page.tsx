@@ -99,35 +99,46 @@ export default function Recherche() {
   const filtresPertinents = onglet !== "vendeurs";
 
   return (
-    <div className="px-4 md:px-8 py-6">
-      <h1 className="font-display text-2xl font-semibold text-indigo-900 mb-4">
-        Que cherchez-vous au marché ?
-      </h1>
+    <div>
+      {/* Héro recherche — bandeau néon assorti au reste du site, plutôt
+          qu'un simple titre sur fond blanc */}
+      <section className="relative overflow-hidden rounded-b-3xl md:rounded-3xl md:mx-8 md:mt-6 bg-indigo-950 px-5 md:px-8 pt-7 pb-6">
+        <span className="neon-blob w-40 h-40 bg-neon-600 -top-14 -left-10" aria-hidden="true" />
+        <span className="neon-blob w-48 h-48 bg-neonpink-500 -bottom-20 -right-8" aria-hidden="true" />
 
-      <div className="flex gap-2 mb-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-900/40" size={18} />
-          <input
-            value={terme}
-            onChange={(e) => setTerme(e.target.value)}
-            placeholder="Ex : robe wax, parfum, nom d'une boutique..."
-            className="w-full bg-white border border-stone-200 rounded-full pl-11 pr-4 py-3 text-sm outline-none focus:border-indigo-800 focus:ring-2 focus:ring-indigo-800/10"
-          />
+        <p className="relative text-neon-300/80 text-[11px] font-semibold tracking-[0.22em] uppercase mb-2">
+          Marché Mboppi
+        </p>
+        <h1 className="relative font-display text-2xl md:text-3xl font-semibold text-white mb-5 text-balance">
+          Que cherchez-vous <span className="logo-gradient italic">au marché</span> ?
+        </h1>
+
+        <div className="relative flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-900/40" size={18} />
+            <input
+              value={terme}
+              onChange={(e) => setTerme(e.target.value)}
+              placeholder="Ex : robe wax, parfum, nom d'une boutique..."
+              className="w-full bg-white/95 rounded-full pl-11 pr-4 py-3.5 text-base outline-none border border-transparent shadow-lg shadow-black/25 focus:border-neon-400 focus:ring-2 focus:ring-neon-400/40"
+            />
+          </div>
+          {filtresPertinents && (
+            <button
+              onClick={() => setFiltresOuverts((v) => !v)}
+              className={`flex items-center gap-1.5 px-4 rounded-full text-sm font-medium border transition-colors flex-shrink-0 ${
+                filtresActifs
+                  ? "btn-neon border-transparent"
+                  : "bg-white/10 border-white/20 text-white/85 hover:bg-white/15"
+              }`}
+            >
+              <SlidersHorizontal size={16} /> Filtres
+            </button>
+          )}
         </div>
-        {filtresPertinents && (
-          <button
-            onClick={() => setFiltresOuverts((v) => !v)}
-            className={`flex items-center gap-1.5 px-4 rounded-full text-sm font-medium border transition-colors ${
-              filtresActifs
-                ? "bg-indigo-900 text-white border-indigo-900"
-                : "bg-white border-stone-200 text-indigo-900/70"
-            }`}
-          >
-            <SlidersHorizontal size={16} /> Filtres
-          </button>
-        )}
-      </div>
+      </section>
 
+      <div className="px-4 md:px-8 pt-5 pb-6">
       {/* Onglets façon TikTok */}
       <div className="flex gap-1.5 mb-4 overflow-x-auto scrollbar-none">
         {ONGLETS.map((o) => {
@@ -152,7 +163,7 @@ export default function Recherche() {
           <select
             value={categorie}
             onChange={(e) => setCategorie(e.target.value)}
-            className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
+            className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-base outline-none focus:border-indigo-800"
           >
             <option value="">Toutes les catégories</option>
             {CATEGORIES.map((c) => (
@@ -165,7 +176,7 @@ export default function Recherche() {
             <select
               value={sousCategorie}
               onChange={(e) => setSousCategorie(e.target.value)}
-              className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
+              className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-base outline-none focus:border-indigo-800"
             >
               <option value="">Nature du produit</option>
               {sousCategoriesPour(categorie).map((s) => (
@@ -181,7 +192,7 @@ export default function Recherche() {
             placeholder="Prix min (FCFA)"
             value={prixMin}
             onChange={(e) => setPrixMin(e.target.value)}
-            className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
+            className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-base outline-none focus:border-indigo-800"
           />
           <input
             type="number"
@@ -189,7 +200,7 @@ export default function Recherche() {
             placeholder="Prix max (FCFA)"
             value={prixMax}
             onChange={(e) => setPrixMax(e.target.value)}
-            className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
+            className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-base outline-none focus:border-indigo-800"
           />
         </div>
       )}
@@ -258,6 +269,7 @@ export default function Recherche() {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

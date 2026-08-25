@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { MapPin, MessageCircle, Store } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
+import BoutonSuivreBoutique from "@/components/BoutonSuivreBoutique";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,13 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
           ).map((f) => f.produitId)
         )
       : new Set<string>();
+
+  const [suiviExistant, nbSuivis] = await Promise.all([
+    appareilId
+      ? prisma.suivi.findUnique({ where: { appareilId_vendeurId: { appareilId, vendeurId: vendeur.id } } })
+      : null,
+    prisma.suivi.count({ where: { vendeurId: vendeur.id } }),
+  ]);
 
   return (
     <div className="px-4 md:px-8 py-8 max-w-5xl mx-auto">
@@ -64,14 +72,21 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
           </p>
         </div>
 
-        <a
-          href={lienContacterVendeur(vendeur.utilisateur.whatsapp, `la boutique ${vendeur.nomBoutique}`)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 bg-feuille-500 hover:bg-feuille-600 transition-colors text-white px-5 py-3 rounded-full font-medium text-sm w-fit"
-        >
-          <MessageCircle size={16} /> Contacter sur WhatsApp
-        </a>
+        <div className="flex flex-col sm:items-end gap-2">
+          <a
+            href={lienContacterVendeur(vendeur.utilisateur.whatsapp, `la boutique ${vendeur.nomBoutique}`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-feuille-500 hover:bg-feuille-600 transition-colors text-white px-5 py-3 rounded-full font-medium text-sm w-fit"
+          >
+            <MessageCircle size={16} /> Contacter sur WhatsApp
+          </a>
+          <BoutonSuivreBoutique
+            vendeurId={vendeur.id}
+            suiviInitial={Boolean(suiviExistant)}
+            nbSuivisInitial={nbSuivis}
+          />
+        </div>
       </div>
 
       {vendeur.produits.length === 0 ? (

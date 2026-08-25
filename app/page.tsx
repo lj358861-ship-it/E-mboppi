@@ -3,6 +3,7 @@ import { lireIdAppareil } from "@/lib/appareil";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
 import PromoCarousel from "@/components/PromoCarousel";
 import RayonPromo from "@/components/RayonPromo";
+import ProduitsSuivis from "@/components/ProduitsSuivis";
 import Link from "next/link";
 import { Store, Flame } from "lucide-react";
 
@@ -71,6 +72,10 @@ export default async function Accueil() {
         <PromoCarousel />
       </section>
 
+      {/* Articles des boutiques suivies — priorité sur le reste du fil, ne
+          s'affiche que si le client suit au moins une boutique */}
+      <ProduitsSuivis />
+
       {aucunProduit && (
         <div className="px-4 md:px-8 py-16 text-center text-indigo-900/60">
           <p className="font-display text-xl mb-2">Le marché ouvre bientôt ses stands.</p>
@@ -90,22 +95,23 @@ export default async function Accueil() {
           </div>
           <div className="flex gap-3 overflow-x-auto scrollbar-none px-4 md:px-8 pb-2 snap-x">
             {produitsHot.map((p) => (
-              <CarteProduitVideo
-                key={p.id}
-                id={p.id}
-                titre={p.titre}
-                prix={p.prix}
-                videoUrl={p.videoUrl}
-                imageUrl={p.photos[0] || null}
-                vendeurId={p.vendeur.id}
-                nomBoutique={p.vendeur.nomBoutique}
-                villeVendeur={p.vendeur.ville}
-                whatsappVendeur={p.vendeur.utilisateur.whatsapp}
-                statutStock={p.statutStock}
-                enPromo={p.enPromo}
-                estFavori={favoris.has(p.id)}
-                enFeu
-              />
+              <div key={p.id} className="w-[220px] md:w-[260px] flex-shrink-0 snap-start">
+                <CarteProduitVideo
+                  id={p.id}
+                  titre={p.titre}
+                  prix={p.prix}
+                  videoUrl={p.videoUrl}
+                  imageUrl={p.photos[0] || null}
+                  vendeurId={p.vendeur.id}
+                  nomBoutique={p.vendeur.nomBoutique}
+                  villeVendeur={p.vendeur.ville}
+                  whatsappVendeur={p.vendeur.utilisateur.whatsapp}
+                  statutStock={p.statutStock}
+                  enPromo={p.enPromo}
+                  estFavori={favoris.has(p.id)}
+                  enFeu
+                />
+              </div>
             ))}
           </div>
         </section>
@@ -121,21 +127,22 @@ export default async function Accueil() {
           </div>
           <div className="flex gap-3 overflow-x-auto scrollbar-none px-4 md:px-8 pb-2 snap-x">
             {produits.map((p) => (
-              <CarteProduitVideo
-                key={p.id}
-                id={p.id}
-                titre={p.titre}
-                prix={p.prix}
-                videoUrl={p.videoUrl}
-                imageUrl={p.photos[0] || null}
-                vendeurId={p.vendeur.id}
-                nomBoutique={p.vendeur.nomBoutique}
-                villeVendeur={p.vendeur.ville}
-                whatsappVendeur={p.vendeur.utilisateur.whatsapp}
-                statutStock={p.statutStock}
-                enPromo={p.enPromo}
-                estFavori={favoris.has(p.id)}
-              />
+              <div key={p.id} className="w-[220px] md:w-[260px] flex-shrink-0 snap-start">
+                <CarteProduitVideo
+                  id={p.id}
+                  titre={p.titre}
+                  prix={p.prix}
+                  videoUrl={p.videoUrl}
+                  imageUrl={p.photos[0] || null}
+                  vendeurId={p.vendeur.id}
+                  nomBoutique={p.vendeur.nomBoutique}
+                  villeVendeur={p.vendeur.ville}
+                  whatsappVendeur={p.vendeur.utilisateur.whatsapp}
+                  statutStock={p.statutStock}
+                  enPromo={p.enPromo}
+                  estFavori={favoris.has(p.id)}
+                />
+              </div>
             ))}
           </div>
         </section>

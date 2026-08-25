@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Heart, MessageCircle, Flame, MapPin } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
 import { classesBadgeStock, labelStatutStock, StatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
-import FlammeCarte from "@/components/FlammeCarte";
 
 type Props = {
   id: string;
@@ -59,11 +58,8 @@ export default function CarteProduitVideo({
       tabIndex={0}
       onClick={() => router.push(`/produit/${id}`)}
       onKeyDown={(e) => e.key === "Enter" && router.push(`/produit/${id}`)}
-      className={`group relative flex-shrink-0 w-[220px] md:w-[260px] rounded-2xl overflow-hidden bg-indigo-950 aspect-[9/16] snap-start cursor-pointer ${
-        enFeu ? "animate-flame-glow" : ""
-      }`}
+      className="group relative w-full rounded-2xl overflow-hidden bg-indigo-950 aspect-[9/16] snap-start cursor-pointer"
     >
-      {enFeu && <FlammeCarte />}
       {videoUrl ? (
         <video
           src={videoUrl}
@@ -82,8 +78,18 @@ export default function CarteProduitVideo({
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
 
+      {enFeu && (
+        <div
+          className="absolute top-2.5 left-2.5 z-20 flex items-center justify-center w-8 h-8 rounded-full border border-mango-400/80 animate-flame-glow"
+          style={{ background: "linear-gradient(145deg, #2a2a2a, #050505)" }}
+          aria-hidden="true"
+        >
+          <Flame size={14} className="text-mango-400 fill-mango-400/90" />
+        </div>
+      )}
+
       {(statutStock !== "DISPONIBLE" || enPromo) && (
-        <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 items-start">
+        <div className={`absolute left-2.5 z-10 flex flex-col gap-1 items-start ${enFeu ? "top-12" : "top-3"}`}>
           {enPromo && (
             <span className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
               <Flame size={11} /> {LABEL_BADGE_PROMO}

@@ -10,6 +10,7 @@ type Produit = {
   id: string;
   titre: string;
   prix: number;
+  description: string | null;
   videoUrl: string | null;
   statutStock: StatutStock;
   enPromo: boolean;
@@ -126,6 +127,9 @@ export default function FeedVideosCourtes({ produits }: { produits: Produit[] })
                 >
                   {labelStatutStock(p.statutStock)}
                 </span>
+              )}
+              {p.description && (
+                <p className="text-xs text-white/70 leading-snug line-clamp-2 mt-1.5">{p.description}</p>
               )}
             </Link>
           </div>
