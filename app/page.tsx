@@ -1,17 +1,31 @@
 import { prisma } from "@/lib/prisma";
+import { lireIdAppareil } from "@/lib/appareil";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
 import PromoCarousel from "@/components/PromoCarousel";
+import RayonPromo from "@/components/RayonPromo";
 import Link from "next/link";
-import { Store } from "lucide-react";
+import { Store, Flame } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+const SELECTION_VENDEUR = {
+  select: { id: true, nomBoutique: true, ville: true, utilisateur: { select: { whatsapp: true } } },
+} as const;
+
+async function idsFavoris(produitIds: string[]): Promise<Set<string>> {
+  const appareilId = lireIdAppareil();
+  if (!appareilId || produitIds.length === 0) return new Set();
+  const favoris = await prisma.favori.findMany({
+    where: { appareilId, produitId: { in: produitIds } },
+    select: { produitId: true },
+  });
+  return new Set(favoris.map((f) => f.produitId));
+}
 
 async function recupererProduitsHot() {
   return prisma.produit.findMany({
     where: { visible: true, OR: [{ enPromo: true }, { boost: true }] },
-    include: {
-      vendeur: { select: { id: true, nomBoutique: true, utilisateur: { select: { whatsapp: true } } } },
-    },
+    include: { vendeur: SELECTION_VENDEUR },
     orderBy: [{ enPromo: "desc" }, { boost: "desc" }, { createdAt: "desc" }],
     take: 20,
   });
@@ -20,9 +34,7 @@ async function recupererProduitsHot() {
 async function recupererProduitsParCategorie() {
   const produits = await prisma.produit.findMany({
     where: { visible: true },
-    include: {
-      vendeur: { select: { id: true, nomBoutique: true, utilisateur: { select: { whatsapp: true } } } },
-    },
+    include: { vendeur: SELECTION_VENDEUR },
     orderBy: { createdAt: "desc" },
     take: 100,
   });
@@ -46,6 +58,12 @@ export default async function Accueil() {
   const [produitsHot, groupes] = await Promise.all([recupererProduitsHot(), recupererProduitsParCategorie()]);
   const aucunProduit = groupes.length === 0;
 
+  const tousLesIds = [
+    ...produitsHot.map((p) => p.id),
+    ...groupes.flatMap(([, produits]) => produits.map((p) => p.id)),
+  ];
+  const favoris = await idsFavoris(tousLesIds);
+
   return (
     <div>
       {/* Carrousel promotionnel néon animé */}
@@ -64,7 +82,7 @@ export default async function Accueil() {
         <section className="mb-8">
           <div className="flex items-center justify-between px-4 md:px-8 mb-3">
             <h2 className="font-display text-lg md:text-xl font-semibold text-indigo-900 flex items-center gap-2">
-              🔥 Hot Sales
+              <Flame className="text-mango-500" size={20} /> Hot Sales
             </h2>
             <Link href="/recherche" className="text-xs font-medium text-neon-600 hover:underline">
               Voir tout
@@ -81,9 +99,12 @@ export default async function Accueil() {
                 imageUrl={p.photos[0] || null}
                 vendeurId={p.vendeur.id}
                 nomBoutique={p.vendeur.nomBoutique}
+                villeVendeur={p.vendeur.ville}
                 whatsappVendeur={p.vendeur.utilisateur.whatsapp}
                 statutStock={p.statutStock}
                 enPromo={p.enPromo}
+                estFavori={favoris.has(p.id)}
+                enFeu
               />
             ))}
           </div>
@@ -109,14 +130,19 @@ export default async function Accueil() {
                 imageUrl={p.photos[0] || null}
                 vendeurId={p.vendeur.id}
                 nomBoutique={p.vendeur.nomBoutique}
+                villeVendeur={p.vendeur.ville}
                 whatsappVendeur={p.vendeur.utilisateur.whatsapp}
-            statutStock={p.statutStock}
-            enPromo={p.enPromo}
+                statutStock={p.statutStock}
+                enPromo={p.enPromo}
+                estFavori={favoris.has(p.id)}
               />
             ))}
           </div>
         </section>
       ))}
+
+      {/* Rayon promo — bas de l'écran, avec son propre filtrage par catégorie */}
+      <RayonPromo />
 
       <div className="px-4 md:px-8 py-10 text-center">
         <Link href="/a-propos#devenir-vendeur" className="btn-neon px-5 py-3 font-medium text-sm">

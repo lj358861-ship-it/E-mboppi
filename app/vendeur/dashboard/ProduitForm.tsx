@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImagePlus, Video, Flame } from "lucide-react";
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORIES, sousCategoriesPour } from "@/lib/categories";
 import { OPTIONS_STATUT_STOCK, StatutStock } from "@/lib/stock";
 import UploadPhotos, { PhotoUploadee } from "@/components/UploadPhotos";
 import UploadVideo, { VideoUploadee } from "@/components/UploadVideo";
@@ -115,27 +115,11 @@ export default function ProduitForm() {
         className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
       />
 
-      <input
-        placeholder="Nature du produit (ex : Parfum, Robe de soirée, Chaussures homme...)"
-        value={form.nature}
-        onChange={(e) => setForm({ ...form, nature: e.target.value })}
-        className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
-      />
-
       <div className="grid grid-cols-2 gap-3">
-        <input
-          required
-          type="number"
-          min={0}
-          placeholder="Prix (FCFA)"
-          value={form.prix}
-          onChange={(e) => setForm({ ...form, prix: e.target.value })}
-          className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
-        />
         <select
           required
           value={form.categorie}
-          onChange={(e) => setForm({ ...form, categorie: e.target.value })}
+          onChange={(e) => setForm({ ...form, categorie: e.target.value, nature: "" })}
           className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
         >
           <option value="" disabled>
@@ -147,7 +131,40 @@ export default function ProduitForm() {
             </option>
           ))}
         </select>
+
+        {sousCategoriesPour(form.categorie).length > 0 ? (
+          <select
+            value={form.nature}
+            onChange={(e) => setForm({ ...form, nature: e.target.value })}
+            className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
+          >
+            <option value="">Nature du produit</option>
+            {sousCategoriesPour(form.categorie).map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            placeholder="Nature du produit (ex : Parfum, Robe de soirée...)"
+            value={form.nature}
+            onChange={(e) => setForm({ ...form, nature: e.target.value })}
+            disabled={!form.categorie}
+            className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800 disabled:opacity-50"
+          />
+        )}
       </div>
+
+      <input
+        required
+        type="number"
+        min={0}
+        placeholder="Prix (FCFA)"
+        value={form.prix}
+        onChange={(e) => setForm({ ...form, prix: e.target.value })}
+        className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
+      />
 
       <select
         value={form.statutStock}
@@ -168,7 +185,7 @@ export default function ProduitForm() {
           onChange={(e) => setForm({ ...form, enPromo: e.target.checked })}
           className="w-4 h-4 accent-neon-500"
         />
-        <Flame size={15} className="text-mango-500" /> Mettre en avant dans « 🔥 Hot Sales »
+        <Flame size={15} className="text-mango-500" /> Mettre en avant dans « Hot Sales »
       </label>
 
       <textarea

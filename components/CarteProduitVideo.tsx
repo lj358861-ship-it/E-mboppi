@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, MessageCircle, Flame, MapPin } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
 import { classesBadgeStock, labelStatutStock, StatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
+import FlammeCarte from "@/components/FlammeCarte";
 
 type Props = {
   id: string;
@@ -15,10 +16,13 @@ type Props = {
   imageUrl?: string | null;
   vendeurId: string;
   nomBoutique: string;
+  villeVendeur?: string | null;
   whatsappVendeur: string;
   estFavori?: boolean;
   statutStock?: StatutStock;
   enPromo?: boolean;
+  /** Habillage "carte qui brûle" — réservé aux sections Hot Sales */
+  enFeu?: boolean;
 };
 
 export default function CarteProduitVideo({
@@ -29,10 +33,12 @@ export default function CarteProduitVideo({
   imageUrl,
   vendeurId,
   nomBoutique,
+  villeVendeur,
   whatsappVendeur,
   estFavori = false,
   statutStock = "DISPONIBLE",
   enPromo = false,
+  enFeu = false,
 }: Props) {
   const [favori, setFavori] = useState(estFavori);
   const router = useRouter();
@@ -53,8 +59,11 @@ export default function CarteProduitVideo({
       tabIndex={0}
       onClick={() => router.push(`/produit/${id}`)}
       onKeyDown={(e) => e.key === "Enter" && router.push(`/produit/${id}`)}
-      className="group relative flex-shrink-0 w-[220px] md:w-[260px] rounded-2xl overflow-hidden bg-indigo-950 aspect-[9/16] snap-start cursor-pointer"
+      className={`group relative flex-shrink-0 w-[220px] md:w-[260px] rounded-2xl overflow-hidden bg-indigo-950 aspect-[9/16] snap-start cursor-pointer ${
+        enFeu ? "animate-flame-glow" : ""
+      }`}
     >
+      {enFeu && <FlammeCarte />}
       {videoUrl ? (
         <video
           src={videoUrl}
@@ -76,8 +85,8 @@ export default function CarteProduitVideo({
       {(statutStock !== "DISPONIBLE" || enPromo) && (
         <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 items-start">
           {enPromo && (
-            <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
-              {LABEL_BADGE_PROMO}
+            <span className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
+              <Flame size={11} /> {LABEL_BADGE_PROMO}
             </span>
           )}
           {statutStock !== "DISPONIBLE" && (
@@ -96,13 +105,18 @@ export default function CarteProduitVideo({
         <Heart size={18} className={favori ? "fill-piment-500 text-piment-500" : "text-white"} />
       </button>
 
-      <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+      <div className="absolute bottom-0 left-0 right-0 p-3 text-white z-10">
         <Link
           href={`/vendeur/${vendeurId}`}
           onClick={(e) => e.stopPropagation()}
-          className="text-xs opacity-80 mb-0.5 inline-block hover:underline hover:opacity-100"
+          className="flex items-center gap-1 text-xs opacity-80 mb-0.5 hover:underline hover:opacity-100 w-fit"
         >
           {nomBoutique}
+          {villeVendeur && (
+            <span className="flex items-center gap-0.5 opacity-70 font-normal">
+              <MapPin size={10} /> {villeVendeur}
+            </span>
+          )}
         </Link>
         <p className="font-medium text-sm leading-snug line-clamp-2 mb-1">{titre}</p>
         <div className="flex items-center justify-between">

@@ -3,7 +3,7 @@ import { lireSession } from "@/lib/auth";
 import { lienContacterVendeur } from "@/lib/whatsapp";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { MessageCircle, Store, Tag } from "lucide-react";
+import { MessageCircle, Store, Tag, MapPin, Flame } from "lucide-react";
 import { classesBadgeStock, labelStatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
 import EcrireAuVendeur from "./EcrireAuVendeur";
 import GalerieProduit from "./GalerieProduit";
@@ -27,17 +27,37 @@ export default async function PageProduit({ params }: { params: { id: string } }
       <div>
         <Link
           href={`/vendeur/${produit.vendeur.id}`}
-          className="flex items-center gap-2 mb-2 w-fit group"
+          className="flex items-start gap-3 mb-4 w-fit group bg-stone-50 border border-stone-200 rounded-2xl p-3"
         >
-          <span className="w-8 h-8 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
+          <span className="w-11 h-11 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
             {produit.vendeur.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={produit.vendeur.logoUrl} alt={produit.vendeur.nomBoutique} className="w-full h-full object-cover" />
             ) : (
-              <Store size={14} className="text-indigo-900/40" />
+              <Store size={16} className="text-indigo-900/40" />
             )}
           </span>
-          <span className="text-sm text-indigo-900/60 group-hover:underline">{produit.vendeur.nomBoutique}</span>
+          <span>
+            <span className="block text-sm font-medium text-indigo-900 group-hover:underline">
+              {produit.vendeur.nomBoutique}
+            </span>
+            <span className="flex items-center gap-2 flex-wrap text-xs text-indigo-900/50 mt-0.5">
+              {produit.vendeur.ville && (
+                <span className="flex items-center gap-0.5">
+                  <MapPin size={11} /> {produit.vendeur.ville}
+                </span>
+              )}
+              <span>
+                Membre depuis{" "}
+                {produit.vendeur.createdAt.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
+              </span>
+            </span>
+            {produit.vendeur.description && (
+              <span className="block text-xs text-indigo-900/60 mt-1 max-w-xs line-clamp-2">
+                {produit.vendeur.description}
+              </span>
+            )}
+          </span>
         </Link>
 
         <h1 className="font-display text-2xl font-semibold text-indigo-900 mb-1">{produit.titre}</h1>
@@ -48,8 +68,8 @@ export default async function PageProduit({ params }: { params: { id: string } }
             {produit.prix.toLocaleString("fr-FR")} F
           </p>
           {produit.enPromo && (
-            <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
-              {LABEL_BADGE_PROMO}
+            <span className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
+              <Flame size={12} /> {LABEL_BADGE_PROMO}
             </span>
           )}
           {produit.categorie && (

@@ -19,9 +19,14 @@ export function labelStatutStock(statut: StatutStock): string {
   return OPTIONS_STATUT_STOCK.find((o) => o.valeur === statut)?.label || "Disponible";
 }
 
-/** Étiquette "🔥 Promo" — indépendante du statut de stock, mise en avant par le vendeur */
+/**
+ * Étiquette "Promo" — indépendante du statut de stock, mise en avant par le
+ * vendeur. Le texte ne porte plus l'emoji flamme : l'icône <Flame> (lucide)
+ * est affichée à côté du texte partout où ce badge est rendu, le symbole
+ * suffit à porter le sens "en feu / tendance".
+ */
 export const CLASSES_BADGE_PROMO = "bg-gradient-neon text-white";
-export const LABEL_BADGE_PROMO = "🔥 Promo";
+export const LABEL_BADGE_PROMO = "Promo";
 
 /** Classes Tailwind pour l'étiquette (badge) affichée sur les cartes produit */
 export function classesBadgeStock(statut: StatutStock): string {

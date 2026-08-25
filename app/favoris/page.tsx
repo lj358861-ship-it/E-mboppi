@@ -37,7 +37,8 @@ export default function Favoris() {
 
       {favoris?.length === 0 && (
         <p className="text-sm text-indigo-900/50">
-          Connectez-vous et ajoutez des articles à vos favoris pour les retrouver ici.
+          Ajoutez des articles à vos favoris (icône cœur) pour les retrouver ici — ils restent
+          enregistrés sur cet appareil.
         </p>
       )}
 

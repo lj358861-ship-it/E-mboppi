@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, ImagePlus, Video, X, Flame } from "lucide-react";
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORIES, sousCategoriesPour } from "@/lib/categories";
 import { OPTIONS_STATUT_STOCK, classesBadgeStock, labelStatutStock, StatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
 import UploadPhotos, { PhotoUploadee } from "@/components/UploadPhotos";
 import UploadVideo, { VideoUploadee } from "@/components/UploadVideo";
@@ -91,8 +91,8 @@ export default function MesArticles({ produits }: { produits: ArticleVendeur[] }
                 </span>
               )}
               {p.enPromo && (
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
-                  {LABEL_BADGE_PROMO}
+                <span className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
+                  <Flame size={10} /> {LABEL_BADGE_PROMO}
                 </span>
               )}
             </div>
@@ -246,26 +246,10 @@ function FormulaireEdition({
         className="bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
       />
 
-      <input
-        placeholder="Nature du produit (ex : Parfum, Robe de soirée...)"
-        value={form.nature}
-        onChange={(e) => setForm({ ...form, nature: e.target.value })}
-        className="bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
-      />
-
       <div className="grid grid-cols-2 gap-2">
-        <input
-          required
-          type="number"
-          min={0}
-          placeholder="Prix (FCFA)"
-          value={form.prix}
-          onChange={(e) => setForm({ ...form, prix: e.target.value })}
-          className="bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
-        />
         <select
           value={form.categorie}
-          onChange={(e) => setForm({ ...form, categorie: e.target.value })}
+          onChange={(e) => setForm({ ...form, categorie: e.target.value, nature: "" })}
           className="bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
         >
           <option value="">Sans catégorie</option>
@@ -275,7 +259,39 @@ function FormulaireEdition({
             </option>
           ))}
         </select>
+
+        {sousCategoriesPour(form.categorie).length > 0 ? (
+          <select
+            value={form.nature}
+            onChange={(e) => setForm({ ...form, nature: e.target.value })}
+            className="bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
+          >
+            <option value="">Nature du produit</option>
+            {sousCategoriesPour(form.categorie).map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            placeholder="Nature du produit"
+            value={form.nature}
+            onChange={(e) => setForm({ ...form, nature: e.target.value })}
+            className="bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
+          />
+        )}
       </div>
+
+      <input
+        required
+        type="number"
+        min={0}
+        placeholder="Prix (FCFA)"
+        value={form.prix}
+        onChange={(e) => setForm({ ...form, prix: e.target.value })}
+        className="bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
+      />
 
       <select
         value={form.statutStock}
@@ -296,7 +312,7 @@ function FormulaireEdition({
           onChange={(e) => setForm({ ...form, enPromo: e.target.checked })}
           className="w-4 h-4 accent-neon-500"
         />
-        <Flame size={13} className="text-mango-500" /> Mettre en avant dans « 🔥 Hot Sales »
+        <Flame size={13} className="text-mango-500" /> Mettre en avant dans « Hot Sales »
       </label>
 
       <textarea

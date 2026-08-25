@@ -1,14 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { lireSession } from "@/lib/auth";
+import { lireIdAppareil } from "@/lib/appareil";
 import { PHOTOS_MAX_PAR_ARTICLE } from "@/lib/media-limits";
 import { classerParPertinence } from "@/lib/fuzzy";
 
 const SELECTION_VENDEUR = {
-  select: { id: true, nomBoutique: true, logoUrl: true, utilisateur: { select: { whatsapp: true } } },
+  select: {
+    id: true,
+    nomBoutique: true,
+    logoUrl: true,
+    ville: true,
+    utilisateur: { select: { whatsapp: true } },
+  },
 } as const;
 
-// GET /api/produits?q=chaussures&categorie=mode&type=photo|video|hot&prixMin=1000&prixMax=5000
+/**
+ * Annote chaque produit avec `estFavori` pour l'appareil courant, pour que
+ * le cœur s'affiche déjà rempli partout (accueil, recherche, boutique) sans
+ * que le client ait besoin de re-marquer un article déjà mis en favori.
+ */
+async function avecFavoris<T extends { id: string }>(produits: T[]): Promise<(T & { estFavori: boolean })[]> {
+  const appareilId = lireIdAppareil();
+  if (!appareilId || produits.length === 0) {
+    return produits.map((p) => ({ ...p, estFavori: false }));
+  }
+  const favoris = await prisma.favori.findMany({
+    where: { appareilId, produitId: { in: produits.map((p) => p.id) } },
+    select: { produitId: true },
+  });
+  const idsFavoris = new Set(favoris.map((f) => f.produitId));
+  return produits.map((p) => ({ ...p, estFavori: idsFavoris.has(p.id) }));
+}
+
+// GET /api/produits?q=chaussures&categorie=mode&nature=Homme&type=photo|video|hot&prixMin=1000&prixMax=5000
 // Ne retourne que les produits visibles (vendeur avec abonnement actif).
 // La recherche par texte (q) tolère les fautes de frappe : on tente d'abord
 // une correspondance stricte, puis on élargit avec un classement approximatif
@@ -16,6 +41,8 @@ const SELECTION_VENDEUR = {
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim() || undefined;
   const categorie = req.nextUrl.searchParams.get("categorie") || undefined;
+  // "nature" = sous-catégorie préselectionnée (Homme/Femme/Enfant, Parfum, Smartphone...)
+  const nature = req.nextUrl.searchParams.get("nature") || undefined;
   const type = req.nextUrl.searchParams.get("type") || undefined; // "photo" | "video" | "hot"
   const prixMin = req.nextUrl.searchParams.get("prixMin");
   const prixMax = req.nextUrl.searchParams.get("prixMax");
@@ -30,11 +57,12 @@ export async function GET(req: NextRequest) {
   const filtreBase = {
     visible: true,
     ...(categorie ? { categorie } : {}),
+    ...(nature ? { nature } : {}),
     ...(Object.keys(filtrePrix).length ? { prix: filtrePrix } : {}),
     ...filtreType,
   };
 
-  // Onglet "🔥" : articles mis en avant (promo ou boostés par l'admin)
+  // Onglet "Hot Sales" : articles mis en avant (promo ou boostés par l'admin)
   if (type === "hot" && !q) {
     const produits = await prisma.produit.findMany({
       where: { ...filtreBase, OR: [{ enPromo: true }, { boost: true }] },
@@ -42,7 +70,7 @@ export async function GET(req: NextRequest) {
       orderBy: [{ enPromo: "desc" }, { boost: "desc" }, { createdAt: "desc" }],
       take: 60,
     });
-    return NextResponse.json({ produits });
+    return NextResponse.json({ produits: await avecFavoris(produits) });
   }
 
   if (!q) {
@@ -52,7 +80,7 @@ export async function GET(req: NextRequest) {
       orderBy: [{ boost: "desc" }, { createdAt: "desc" }],
       take: 60,
     });
-    return NextResponse.json({ produits });
+    return NextResponse.json({ produits: await avecFavoris(produits) });
   }
 
   // --- Passe 1 : correspondance stricte (rapide, sur titre/nature/boutique) ---
@@ -71,7 +99,7 @@ export async function GET(req: NextRequest) {
   });
 
   if (correspondanceStricte.length > 0) {
-    return NextResponse.json({ produits: correspondanceStricte });
+    return NextResponse.json({ produits: await avecFavoris(correspondanceStricte) });
   }
 
   // --- Passe 2 : fautes de frappe — on élargit et on classe par similarité ---
@@ -86,7 +114,7 @@ export async function GET(req: NextRequest) {
     [p.titre, p.nature || "", p.categorie || "", p.vendeur.nomBoutique].join(" ")
   ).slice(0, 60);
 
-  return NextResponse.json({ produits: classes });
+  return NextResponse.json({ produits: await avecFavoris(classes) });
 }
 
 // POST /api/produits — un vendeur ajoute un produit (visible = statut de son abonnement)

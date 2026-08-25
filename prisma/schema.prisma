@@ -131,11 +131,19 @@ model Message {
 
 model Favori {
   id            String   @id @default(cuid())
-  clientId      String
-  client        Utilisateur @relation(fields: [clientId], references: [id])
+  // Compte client (optionnel) — gardé pour compatibilité si un système de
+  // comptes clients est ajouté plus tard.
+  clientId      String?
+  client        Utilisateur? @relation(fields: [clientId], references: [id])
+  // Identifiant d'appareil anonyme (cookie longue durée) — c'est la clé
+  // principale utilisée aujourd'hui : pas besoin de compte pour que les
+  // favoris d'un client restent enregistrés sur son appareil.
+  appareilId    String?
   produitId     String
   produit       Produit  @relation(fields: [produitId], references: [id])
   createdAt     DateTime @default(now())
 
   @@unique([clientId, produitId])
+  @@unique([appareilId, produitId])
+  @@index([appareilId])
 }

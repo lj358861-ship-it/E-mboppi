@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { lireIdAppareil } from "@/lib/appareil";
 import { notFound } from "next/navigation";
 import { MapPin, MessageCircle, Store } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
@@ -19,6 +20,19 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
   });
 
   if (!vendeur) notFound();
+
+  const appareilId = lireIdAppareil();
+  const favoris =
+    appareilId && vendeur.produits.length > 0
+      ? new Set(
+          (
+            await prisma.favori.findMany({
+              where: { appareilId, produitId: { in: vendeur.produits.map((p) => p.id) } },
+              select: { produitId: true },
+            })
+          ).map((f) => f.produitId)
+        )
+      : new Set<string>();
 
   return (
     <div className="px-4 md:px-8 py-8 max-w-5xl mx-auto">
@@ -44,6 +58,9 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
           )}
           <p className="text-xs text-indigo-900/40 mt-2">
             {vendeur.produits.length} article{vendeur.produits.length > 1 ? "s" : ""} en boutique
+            {" · "}
+            Membre depuis{" "}
+            {vendeur.createdAt.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
           </p>
         </div>
 
@@ -71,9 +88,11 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
               imageUrl={p.photos[0] || null}
               vendeurId={vendeur.id}
               nomBoutique={vendeur.nomBoutique}
+              villeVendeur={vendeur.ville}
               whatsappVendeur={vendeur.utilisateur.whatsapp}
-            statutStock={p.statutStock}
-            enPromo={p.enPromo}
+              statutStock={p.statutStock}
+              enPromo={p.enPromo}
+              estFavori={favoris.has(p.id)}
             />
           ))}
         </div>

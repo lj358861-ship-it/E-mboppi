@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Search, SlidersHorizontal, Store, Flame, Image as ImageIcon, Clapperboard, Users } from "lucide-react";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORIES, sousCategoriesPour } from "@/lib/categories";
 import { StatutStock } from "@/lib/stock";
 
 type Produit = {
@@ -15,7 +15,8 @@ type Produit = {
   photos: string[];
   statutStock: StatutStock;
   enPromo: boolean;
-  vendeur: { id: string; nomBoutique: string; logoUrl: string | null; utilisateur: { whatsapp: string } };
+  estFavori?: boolean;
+  vendeur: { id: string; nomBoutique: string; logoUrl: string | null; ville: string | null; utilisateur: { whatsapp: string } };
 };
 
 type VendeurResultat = {
@@ -29,7 +30,7 @@ type VendeurResultat = {
 type Onglet = "hot" | "photo" | "video" | "vendeurs";
 
 const ONGLETS: { valeur: Onglet; label: string; icone: typeof Flame }[] = [
-  { valeur: "hot", label: "🔥", icone: Flame },
+  { valeur: "hot", label: "Hot Sales", icone: Flame },
   { valeur: "photo", label: "Annonces", icone: ImageIcon },
   { valeur: "video", label: "Vidéos", icone: Clapperboard },
   { valeur: "vendeurs", label: "Vendeurs", icone: Users },
@@ -38,6 +39,7 @@ const ONGLETS: { valeur: Onglet; label: string; icone: typeof Flame }[] = [
 export default function Recherche() {
   const [terme, setTerme] = useState("");
   const [categorie, setCategorie] = useState("");
+  const [sousCategorie, setSousCategorie] = useState("");
   const [prixMin, setPrixMin] = useState("");
   const [prixMax, setPrixMax] = useState("");
   const [filtresOuverts, setFiltresOuverts] = useState(false);
@@ -48,7 +50,7 @@ export default function Recherche() {
   const [chargement, setChargement] = useState(false);
 
   const rechercher = useCallback(
-    async (params: { q: string; categorie: string; prixMin: string; prixMax: string; onglet: Onglet }) => {
+    async (params: { q: string; categorie: string; nature: string; prixMin: string; prixMax: string; onglet: Onglet }) => {
       setChargement(true);
 
       if (params.onglet === "vendeurs") {
@@ -64,6 +66,7 @@ export default function Recherche() {
       const query = new URLSearchParams();
       if (params.q) query.set("q", params.q);
       if (params.categorie) query.set("categorie", params.categorie);
+      if (params.nature) query.set("nature", params.nature);
       if (params.prixMin) query.set("prixMin", params.prixMin);
       if (params.prixMax) query.set("prixMax", params.prixMax);
       query.set("type", params.onglet);
@@ -77,12 +80,22 @@ export default function Recherche() {
   );
 
   useEffect(() => {
-    const delai = setTimeout(() => rechercher({ q: terme, categorie, prixMin, prixMax, onglet }), 350);
+    const delai = setTimeout(
+      () => rechercher({ q: terme, categorie, nature: sousCategorie, prixMin, prixMax, onglet }),
+      350
+    );
     return () => clearTimeout(delai);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [terme, categorie, prixMin, prixMax, onglet]);
+  }, [terme, categorie, sousCategorie, prixMin, prixMax, onglet]);
 
-  const filtresActifs = Boolean(categorie || prixMin || prixMax);
+  // La liste "nature du produit" dépend de la catégorie choisie — on
+  // réinitialise si la catégorie change et n'a plus d'options en commun.
+  useEffect(() => {
+    if (!sousCategoriesPour(categorie).includes(sousCategorie)) setSousCategorie("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categorie]);
+
+  const filtresActifs = Boolean(categorie || sousCategorie || prixMin || prixMax);
   const filtresPertinents = onglet !== "vendeurs";
 
   return (
@@ -128,7 +141,7 @@ export default function Recherche() {
                 actif ? "bg-indigo-900 text-white" : "bg-white border border-stone-200 text-indigo-900/60"
               }`}
             >
-              <Icone size={15} /> {o.label}
+              <Icone size={15} className={o.valeur === "hot" ? "text-mango-500" : undefined} /> {o.label}
             </button>
           );
         })}
@@ -148,6 +161,20 @@ export default function Recherche() {
               </option>
             ))}
           </select>
+          {sousCategoriesPour(categorie).length > 0 && (
+            <select
+              value={sousCategorie}
+              onChange={(e) => setSousCategorie(e.target.value)}
+              className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
+            >
+              <option value="">Nature du produit</option>
+              {sousCategoriesPour(categorie).map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          )}
           <input
             type="number"
             min={0}
@@ -220,9 +247,12 @@ export default function Recherche() {
                 imageUrl={p.photos[0] || null}
                 vendeurId={p.vendeur.id}
                 nomBoutique={p.vendeur.nomBoutique}
+                villeVendeur={p.vendeur.ville}
                 whatsappVendeur={p.vendeur.utilisateur.whatsapp}
                 statutStock={p.statutStock}
                 enPromo={p.enPromo}
+                estFavori={p.estFavori}
+                enFeu={onglet === "hot"}
               />
             ))}
           </div>

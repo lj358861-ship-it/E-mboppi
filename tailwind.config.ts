@@ -89,6 +89,16 @@ const config: Config = {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
         },
+        flameGlow: {
+          "0%, 100%": {
+            boxShadow:
+              "0 0 14px rgba(242,169,59,0.55), 0 0 30px rgba(215,38,61,0.30), inset 0 0 18px rgba(242,169,59,0.12)",
+          },
+          "50%": {
+            boxShadow:
+              "0 0 24px rgba(242,169,59,0.85), 0 0 52px rgba(215,38,61,0.5), inset 0 0 26px rgba(242,169,59,0.2)",
+          },
+        },
       },
       animation: {
         "fade-in-up": "fadeInUp 0.7s ease-out both",
@@ -96,6 +106,7 @@ const config: Config = {
         "gradient-shift": "gradientShift 6s ease infinite",
         "float-slow": "floatSlow 6s ease-in-out infinite",
         "marquee-slide": "marqueeSlide 18s linear infinite",
+        "flame-glow": "flameGlow 1.8s ease-in-out infinite",
       },
     },
   },
