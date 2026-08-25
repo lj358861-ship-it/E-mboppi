@@ -100,6 +100,8 @@ model Produit {
   videoPublicId    String?
 
   statutStock  StatutStock @default(DISPONIBLE)
+  nature       String?
+  enPromo      Boolean  @default(false)
 
   visible      Boolean  @default(true)
   boost        Boolean  @default(false)

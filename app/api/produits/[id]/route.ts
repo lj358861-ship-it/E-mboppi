@@ -58,6 +58,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       donnees.prix = prix;
     }
     if (body.categorie !== undefined) donnees.categorie = body.categorie || null;
+    if (body.nature !== undefined) donnees.nature = body.nature || null;
+    if (body.enPromo !== undefined) donnees.enPromo = Boolean(body.enPromo);
     if (body.statutStock !== undefined) {
       if (!STATUTS_STOCK_VALIDES.includes(body.statutStock)) {
         return NextResponse.json({ erreur: "Statut de stock invalide" }, { status: 400 });

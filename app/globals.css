@@ -4,11 +4,22 @@
 
 :root {
   --tag-notch: 10px;
+  /* Hauteurs réelles des barres de navigation mobile (hors zone de sécurité) */
+  --mobile-header-h: 56px;
+  --mobile-navbar-h: 64px;
+}
+
+html {
+  /* Empêche tout débordement horizontal accidentel (ex: éléments larges sur petit écran) */
+  overflow-x: hidden;
 }
 
 body {
   background-color: #FAFAF8;
   color: #16274F;
+  overflow-x: hidden;
+  /* Longueur minimale garantie même sur les navigateurs mobiles qui rétrécissent le viewport */
+  min-height: 100dvh;
 }
 
 /* Motif "étiquette de marché" — coin découpé façon ticket de prix */

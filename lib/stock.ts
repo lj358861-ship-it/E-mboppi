@@ -19,6 +19,10 @@ export function labelStatutStock(statut: StatutStock): string {
   return OPTIONS_STATUT_STOCK.find((o) => o.valeur === statut)?.label || "Disponible";
 }
 
+/** Étiquette "🔥 Promo" — indépendante du statut de stock, mise en avant par le vendeur */
+export const CLASSES_BADGE_PROMO = "bg-gradient-neon text-white";
+export const LABEL_BADGE_PROMO = "🔥 Promo";
+
 /** Classes Tailwind pour l'étiquette (badge) affichée sur les cartes produit */
 export function classesBadgeStock(statut: StatutStock): string {
   switch (statut) {

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope, IBM_Plex_Mono } from "next/font/google";
 import Navigation from "@/components/Navigation";
 import MainWrapper from "@/components/MainWrapper";
@@ -25,6 +25,12 @@ export const metadata: Metadata = {
   title: "E-Mboppi — Le marché Mboppi, en ligne",
   description:
     "E-Mboppi, la plateforme créée par Kmer Vision qui rapproche les vendeurs du marché Mboppi de leurs clients, partout au Cameroun.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

@@ -62,7 +62,7 @@ export default function Navigation() {
       </header>
 
       {/* Mobile top bar */}
-      <header className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-indigo-950/95 backdrop-blur border-b border-white/5">
+      <header className="md:hidden sticky top-0 z-40 flex items-center justify-between h-14 px-4 bg-indigo-950/95 backdrop-blur border-b border-white/5">
         <Link href="/vendeur/connexion" aria-label="Connexion" className="text-white/80">
           <LogIn size={20} className={pathname === "/vendeur/connexion" ? "text-neon-400" : ""} />
         </Link>
@@ -77,7 +77,10 @@ export default function Navigation() {
       </header>
 
       {/* Mobile bottom nav — façon TikTok */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around bg-indigo-950/95 backdrop-blur border-t border-white/5 py-2">
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around h-16 bg-indigo-950/95 backdrop-blur border-t border-white/5"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         {liensBas.map((l) => {
           const Icone = l.icone;
           const actif = pathname === l.href;

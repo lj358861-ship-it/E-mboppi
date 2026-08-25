@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2, ImagePlus, Video, X } from "lucide-react";
+import { Pencil, Trash2, ImagePlus, Video, X, Flame } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
-import { OPTIONS_STATUT_STOCK, classesBadgeStock, labelStatutStock, StatutStock } from "@/lib/stock";
+import { OPTIONS_STATUT_STOCK, classesBadgeStock, labelStatutStock, StatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
 import UploadPhotos, { PhotoUploadee } from "@/components/UploadPhotos";
 import UploadVideo, { VideoUploadee } from "@/components/UploadVideo";
 
 export type ArticleVendeur = {
   id: string;
   titre: string;
+  nature: string | null;
   prix: number;
   description: string | null;
   categorie: string | null;
@@ -20,6 +21,7 @@ export type ArticleVendeur = {
   videoPublicId: string | null;
   visible: boolean;
   statutStock: StatutStock;
+  enPromo: boolean;
 };
 
 export default function MesArticles({ produits }: { produits: ArticleVendeur[] }) {
@@ -88,6 +90,11 @@ export default function MesArticles({ produits }: { produits: ArticleVendeur[] }
                   {labelStatutStock(p.statutStock)}
                 </span>
               )}
+              {p.enPromo && (
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
+                  {LABEL_BADGE_PROMO}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
               <button
@@ -130,10 +137,12 @@ function FormulaireEdition({
   const [typeAnnonce, setTypeAnnonce] = useState<"photo" | "video">(produit.videoUrl ? "video" : "photo");
   const [form, setForm] = useState({
     titre: produit.titre,
+    nature: produit.nature || "",
     prix: String(produit.prix),
     categorie: produit.categorie || "",
     description: produit.description || "",
     statutStock: produit.statutStock,
+    enPromo: produit.enPromo,
   });
   const [photos, setPhotos] = useState<PhotoUploadee[]>(
     produit.photos.map((url, i) => ({ url, publicId: produit.photosPublicIds[i] || url }))
@@ -170,10 +179,12 @@ function FormulaireEdition({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           titre: form.titre,
+          nature: form.nature || null,
           prix: Number(form.prix),
           categorie: form.categorie || null,
           description: form.description || null,
           statutStock: form.statutStock,
+          enPromo: form.enPromo,
           photos: photos.map((p) => p.url),
           photosPublicIds: photos.map((p) => p.publicId),
           videoUrl: video?.url || null,
@@ -235,6 +246,13 @@ function FormulaireEdition({
         className="bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
       />
 
+      <input
+        placeholder="Nature du produit (ex : Parfum, Robe de soirée...)"
+        value={form.nature}
+        onChange={(e) => setForm({ ...form, nature: e.target.value })}
+        className="bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
+      />
+
       <div className="grid grid-cols-2 gap-2">
         <input
           required
@@ -270,6 +288,16 @@ function FormulaireEdition({
           </option>
         ))}
       </select>
+
+      <label className="flex items-center gap-2 text-xs text-indigo-900 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={form.enPromo}
+          onChange={(e) => setForm({ ...form, enPromo: e.target.checked })}
+          className="w-4 h-4 accent-neon-500"
+        />
+        <Flame size={13} className="text-mango-500" /> Mettre en avant dans « 🔥 Hot Sales »
+      </label>
 
       <textarea
         placeholder="Description"

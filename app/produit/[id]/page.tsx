@@ -4,7 +4,7 @@ import { lienContacterVendeur } from "@/lib/whatsapp";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MessageCircle, Store, Tag } from "lucide-react";
-import { classesBadgeStock, labelStatutStock } from "@/lib/stock";
+import { classesBadgeStock, labelStatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
 import EcrireAuVendeur from "./EcrireAuVendeur";
 import GalerieProduit from "./GalerieProduit";
 
@@ -40,12 +40,18 @@ export default async function PageProduit({ params }: { params: { id: string } }
           <span className="text-sm text-indigo-900/60 group-hover:underline">{produit.vendeur.nomBoutique}</span>
         </Link>
 
-        <h1 className="font-display text-2xl font-semibold text-indigo-900 mb-2">{produit.titre}</h1>
+        <h1 className="font-display text-2xl font-semibold text-indigo-900 mb-1">{produit.titre}</h1>
+        {produit.nature && <p className="text-sm text-indigo-900/50 mb-2">{produit.nature}</p>}
 
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
           <p className="font-mono text-mango-600 text-xl font-semibold">
             {produit.prix.toLocaleString("fr-FR")} F
           </p>
+          {produit.enPromo && (
+            <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
+              {LABEL_BADGE_PROMO}
+            </span>
+          )}
           {produit.categorie && (
             <span className="flex items-center gap-1 bg-stone-100 text-indigo-900/60 text-xs px-2.5 py-1 rounded-full">
               <Tag size={12} /> {produit.categorie}

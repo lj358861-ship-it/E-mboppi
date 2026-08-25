@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
+import Link from "next/link";
+import { Search, SlidersHorizontal, Store, Flame, Image as ImageIcon, Clapperboard, Users } from "lucide-react";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
 import { CATEGORIES } from "@/lib/categories";
 import { StatutStock } from "@/lib/stock";
@@ -13,8 +14,26 @@ type Produit = {
   videoUrl: string | null;
   photos: string[];
   statutStock: StatutStock;
+  enPromo: boolean;
   vendeur: { id: string; nomBoutique: string; logoUrl: string | null; utilisateur: { whatsapp: string } };
 };
+
+type VendeurResultat = {
+  id: string;
+  nomBoutique: string;
+  logoUrl: string | null;
+  ville: string | null;
+  _count: { produits: number };
+};
+
+type Onglet = "hot" | "photo" | "video" | "vendeurs";
+
+const ONGLETS: { valeur: Onglet; label: string; icone: typeof Flame }[] = [
+  { valeur: "hot", label: "🔥", icone: Flame },
+  { valeur: "photo", label: "Annonces", icone: ImageIcon },
+  { valeur: "video", label: "Vidéos", icone: Clapperboard },
+  { valeur: "vendeurs", label: "Vendeurs", icone: Users },
+];
 
 export default function Recherche() {
   const [terme, setTerme] = useState("");
@@ -22,17 +41,32 @@ export default function Recherche() {
   const [prixMin, setPrixMin] = useState("");
   const [prixMax, setPrixMax] = useState("");
   const [filtresOuverts, setFiltresOuverts] = useState(false);
+  const [onglet, setOnglet] = useState<Onglet>("hot");
+
   const [produits, setProduits] = useState<Produit[]>([]);
+  const [vendeurs, setVendeurs] = useState<VendeurResultat[]>([]);
   const [chargement, setChargement] = useState(false);
 
   const rechercher = useCallback(
-    async (params: { q: string; categorie: string; prixMin: string; prixMax: string }) => {
+    async (params: { q: string; categorie: string; prixMin: string; prixMax: string; onglet: Onglet }) => {
       setChargement(true);
+
+      if (params.onglet === "vendeurs") {
+        const query = new URLSearchParams();
+        if (params.q) query.set("q", params.q);
+        const res = await fetch(`/api/vendeurs/recherche?${query.toString()}`);
+        const data = await res.json();
+        setVendeurs(data.vendeurs || []);
+        setChargement(false);
+        return;
+      }
+
       const query = new URLSearchParams();
       if (params.q) query.set("q", params.q);
       if (params.categorie) query.set("categorie", params.categorie);
       if (params.prixMin) query.set("prixMin", params.prixMin);
       if (params.prixMax) query.set("prixMax", params.prixMax);
+      query.set("type", params.onglet);
 
       const res = await fetch(`/api/produits?${query.toString()}`);
       const data = await res.json();
@@ -43,12 +77,13 @@ export default function Recherche() {
   );
 
   useEffect(() => {
-    const delai = setTimeout(() => rechercher({ q: terme, categorie, prixMin, prixMax }), 350);
+    const delai = setTimeout(() => rechercher({ q: terme, categorie, prixMin, prixMax, onglet }), 350);
     return () => clearTimeout(delai);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [terme, categorie, prixMin, prixMax]);
+  }, [terme, categorie, prixMin, prixMax, onglet]);
 
   const filtresActifs = Boolean(categorie || prixMin || prixMax);
+  const filtresPertinents = onglet !== "vendeurs";
 
   return (
     <div className="px-4 md:px-8 py-6">
@@ -62,23 +97,44 @@ export default function Recherche() {
           <input
             value={terme}
             onChange={(e) => setTerme(e.target.value)}
-            placeholder="Ex : robe wax, chaussures, sac..."
+            placeholder="Ex : robe wax, parfum, nom d'une boutique..."
             className="w-full bg-white border border-stone-200 rounded-full pl-11 pr-4 py-3 text-sm outline-none focus:border-indigo-800 focus:ring-2 focus:ring-indigo-800/10"
           />
         </div>
-        <button
-          onClick={() => setFiltresOuverts((v) => !v)}
-          className={`flex items-center gap-1.5 px-4 rounded-full text-sm font-medium border transition-colors ${
-            filtresActifs
-              ? "bg-indigo-900 text-white border-indigo-900"
-              : "bg-white border-stone-200 text-indigo-900/70"
-          }`}
-        >
-          <SlidersHorizontal size={16} /> Filtres
-        </button>
+        {filtresPertinents && (
+          <button
+            onClick={() => setFiltresOuverts((v) => !v)}
+            className={`flex items-center gap-1.5 px-4 rounded-full text-sm font-medium border transition-colors ${
+              filtresActifs
+                ? "bg-indigo-900 text-white border-indigo-900"
+                : "bg-white border-stone-200 text-indigo-900/70"
+            }`}
+          >
+            <SlidersHorizontal size={16} /> Filtres
+          </button>
+        )}
       </div>
 
-      {filtresOuverts && (
+      {/* Onglets façon TikTok */}
+      <div className="flex gap-1.5 mb-4 overflow-x-auto scrollbar-none">
+        {ONGLETS.map((o) => {
+          const Icone = o.icone;
+          const actif = onglet === o.valeur;
+          return (
+            <button
+              key={o.valeur}
+              onClick={() => setOnglet(o.valeur)}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                actif ? "bg-indigo-900 text-white" : "bg-white border border-stone-200 text-indigo-900/60"
+              }`}
+            >
+              <Icone size={15} /> {o.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {filtresOuverts && filtresPertinents && (
         <div className="grid sm:grid-cols-3 gap-3 mb-5 bg-white border border-stone-200 rounded-2xl p-4">
           <select
             value={categorie}
@@ -113,28 +169,65 @@ export default function Recherche() {
 
       {chargement && <p className="text-sm text-indigo-900/50">Recherche en cours…</p>}
 
-      {!chargement && produits.length === 0 && (
-        <p className="text-sm text-indigo-900/50">
-          Aucun article ne correspond à votre recherche pour le moment.
-        </p>
+      {onglet === "vendeurs" ? (
+        <>
+          {!chargement && vendeurs.length === 0 && (
+            <p className="text-sm text-indigo-900/50">Aucune boutique ne correspond à votre recherche.</p>
+          )}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {vendeurs.map((v) => (
+              <Link
+                key={v.id}
+                href={`/vendeur/${v.id}`}
+                className="flex flex-col items-center text-center gap-2 bg-white border border-stone-200 rounded-2xl p-4 hover:border-indigo-800 transition-colors"
+              >
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-stone-100 flex items-center justify-center flex-shrink-0">
+                  {v.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={v.logoUrl} alt={v.nomBoutique} className="w-full h-full object-cover" />
+                  ) : (
+                    <Store size={22} className="text-indigo-900/30" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-indigo-900 line-clamp-1">{v.nomBoutique}</p>
+                  {v.ville && <p className="text-xs text-indigo-900/50">{v.ville}</p>}
+                  <p className="text-[11px] text-indigo-900/40 mt-0.5">
+                    {v._count.produits} article{v._count.produits > 1 ? "s" : ""}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          {!chargement && produits.length === 0 && (
+            <p className="text-sm text-indigo-900/50">
+              {onglet === "hot"
+                ? "Aucun article en promo ou tendance pour le moment."
+                : "Aucun article ne correspond à votre recherche pour le moment."}
+            </p>
+          )}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {produits.map((p) => (
+              <CarteProduitVideo
+                key={p.id}
+                id={p.id}
+                titre={p.titre}
+                prix={p.prix}
+                videoUrl={p.videoUrl}
+                imageUrl={p.photos[0] || null}
+                vendeurId={p.vendeur.id}
+                nomBoutique={p.vendeur.nomBoutique}
+                whatsappVendeur={p.vendeur.utilisateur.whatsapp}
+                statutStock={p.statutStock}
+                enPromo={p.enPromo}
+              />
+            ))}
+          </div>
+        </>
       )}
-
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-        {produits.map((p) => (
-          <CarteProduitVideo
-            key={p.id}
-            id={p.id}
-            titre={p.titre}
-            prix={p.prix}
-            videoUrl={p.videoUrl}
-            imageUrl={p.photos[0] || null}
-            vendeurId={p.vendeur.id}
-            nomBoutique={p.vendeur.nomBoutique}
-            whatsappVendeur={p.vendeur.utilisateur.whatsapp}
-            statutStock={p.statutStock}
-          />
-        ))}
-      </div>
     </div>
   );
 }

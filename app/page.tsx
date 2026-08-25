@@ -6,6 +6,17 @@ import { Store } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
+async function recupererProduitsHot() {
+  return prisma.produit.findMany({
+    where: { visible: true, OR: [{ enPromo: true }, { boost: true }] },
+    include: {
+      vendeur: { select: { id: true, nomBoutique: true, utilisateur: { select: { whatsapp: true } } } },
+    },
+    orderBy: [{ enPromo: "desc" }, { boost: "desc" }, { createdAt: "desc" }],
+    take: 20,
+  });
+}
+
 async function recupererProduitsParCategorie() {
   const produits = await prisma.produit.findMany({
     where: { visible: true },
@@ -32,7 +43,7 @@ async function recupererProduitsParCategorie() {
 }
 
 export default async function Accueil() {
-  const groupes = await recupererProduitsParCategorie();
+  const [produitsHot, groupes] = await Promise.all([recupererProduitsHot(), recupererProduitsParCategorie()]);
   const aucunProduit = groupes.length === 0;
 
   return (
@@ -47,6 +58,36 @@ export default async function Accueil() {
           <p className="font-display text-xl mb-2">Le marché ouvre bientôt ses stands.</p>
           <p className="text-sm">Revenez dans quelques instants, les vendeurs arrivent.</p>
         </div>
+      )}
+
+      {produitsHot.length > 0 && (
+        <section className="mb-8">
+          <div className="flex items-center justify-between px-4 md:px-8 mb-3">
+            <h2 className="font-display text-lg md:text-xl font-semibold text-indigo-900 flex items-center gap-2">
+              🔥 Hot Sales
+            </h2>
+            <Link href="/recherche" className="text-xs font-medium text-neon-600 hover:underline">
+              Voir tout
+            </Link>
+          </div>
+          <div className="flex gap-3 overflow-x-auto scrollbar-none px-4 md:px-8 pb-2 snap-x">
+            {produitsHot.map((p) => (
+              <CarteProduitVideo
+                key={p.id}
+                id={p.id}
+                titre={p.titre}
+                prix={p.prix}
+                videoUrl={p.videoUrl}
+                imageUrl={p.photos[0] || null}
+                vendeurId={p.vendeur.id}
+                nomBoutique={p.vendeur.nomBoutique}
+                whatsappVendeur={p.vendeur.utilisateur.whatsapp}
+                statutStock={p.statutStock}
+                enPromo={p.enPromo}
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       {groupes.map(([categorie, produits], i) => (
@@ -70,6 +111,7 @@ export default async function Accueil() {
                 nomBoutique={p.vendeur.nomBoutique}
                 whatsappVendeur={p.vendeur.utilisateur.whatsapp}
             statutStock={p.statutStock}
+            enPromo={p.enPromo}
               />
             ))}
           </div>

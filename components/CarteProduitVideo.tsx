@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Heart, MessageCircle } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
-import { classesBadgeStock, labelStatutStock, StatutStock } from "@/lib/stock";
+import { classesBadgeStock, labelStatutStock, StatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
 
 type Props = {
   id: string;
@@ -18,6 +18,7 @@ type Props = {
   whatsappVendeur: string;
   estFavori?: boolean;
   statutStock?: StatutStock;
+  enPromo?: boolean;
 };
 
 export default function CarteProduitVideo({
@@ -31,6 +32,7 @@ export default function CarteProduitVideo({
   whatsappVendeur,
   estFavori = false,
   statutStock = "DISPONIBLE",
+  enPromo = false,
 }: Props) {
   const [favori, setFavori] = useState(estFavori);
   const router = useRouter();
@@ -71,12 +73,19 @@ export default function CarteProduitVideo({
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
 
-      {statutStock !== "DISPONIBLE" && (
-        <span
-          className={`absolute top-3 left-3 z-10 text-[10px] px-2 py-1 rounded-full font-semibold ${classesBadgeStock(statutStock)}`}
-        >
-          {labelStatutStock(statutStock)}
-        </span>
+      {(statutStock !== "DISPONIBLE" || enPromo) && (
+        <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 items-start">
+          {enPromo && (
+            <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
+              {LABEL_BADGE_PROMO}
+            </span>
+          )}
+          {statutStock !== "DISPONIBLE" && (
+            <span className={`text-[10px] px-2 py-1 rounded-full font-semibold ${classesBadgeStock(statutStock)}`}>
+              {labelStatutStock(statutStock)}
+            </span>
+          )}
+        </div>
       )}
 
       <button

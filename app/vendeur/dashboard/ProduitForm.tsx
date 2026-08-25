@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ImagePlus, Video } from "lucide-react";
+import { ImagePlus, Video, Flame } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 import { OPTIONS_STATUT_STOCK, StatutStock } from "@/lib/stock";
 import UploadPhotos, { PhotoUploadee } from "@/components/UploadPhotos";
@@ -14,10 +14,12 @@ export default function ProduitForm() {
   const [typeAnnonce, setTypeAnnonce] = useState<TypeAnnonce>("photo");
   const [form, setForm] = useState({
     titre: "",
+    nature: "",
     prix: "",
     categorie: "",
     description: "",
     statutStock: "DISPONIBLE" as StatutStock,
+    enPromo: false,
   });
   const [photos, setPhotos] = useState<PhotoUploadee[]>([]);
   const [video, setVideo] = useState<VideoUploadee>(null);
@@ -66,7 +68,7 @@ export default function ProduitForm() {
       return;
     }
 
-    setForm({ titre: "", prix: "", categorie: "", description: "", statutStock: "DISPONIBLE" });
+    setForm({ titre: "", nature: "", prix: "", categorie: "", description: "", statutStock: "DISPONIBLE", enPromo: false });
     setPhotos([]);
     setVideo(null);
     router.refresh();
@@ -107,9 +109,16 @@ export default function ProduitForm() {
 
       <input
         required
-        placeholder="Titre de l'article"
+        placeholder="Titre de l'article (ex : Yves Saint Laurent)"
         value={form.titre}
         onChange={(e) => setForm({ ...form, titre: e.target.value })}
+        className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
+      />
+
+      <input
+        placeholder="Nature du produit (ex : Parfum, Robe de soirée, Chaussures homme...)"
+        value={form.nature}
+        onChange={(e) => setForm({ ...form, nature: e.target.value })}
         className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
       />
 
@@ -151,6 +160,16 @@ export default function ProduitForm() {
           </option>
         ))}
       </select>
+
+      <label className="flex items-center gap-2 text-sm text-indigo-900 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={form.enPromo}
+          onChange={(e) => setForm({ ...form, enPromo: e.target.checked })}
+          className="w-4 h-4 accent-neon-500"
+        />
+        <Flame size={15} className="text-mango-500" /> Mettre en avant dans « 🔥 Hot Sales »
+      </label>
 
       <textarea
         placeholder="Description"

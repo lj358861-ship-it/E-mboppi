@@ -2,12 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { lireSession } from "@/lib/auth";
 import { PHOTOS_MAX_PAR_ARTICLE } from "@/lib/media-limits";
+import { classerParPertinence } from "@/lib/fuzzy";
 
-// GET /api/produits?q=chaussures&categorie=mode&prixMin=1000&prixMax=5000
-// Ne retourne que les produits visibles (vendeur avec abonnement actif)
+const SELECTION_VENDEUR = {
+  select: { id: true, nomBoutique: true, logoUrl: true, utilisateur: { select: { whatsapp: true } } },
+} as const;
+
+// GET /api/produits?q=chaussures&categorie=mode&type=photo|video|hot&prixMin=1000&prixMax=5000
+// Ne retourne que les produits visibles (vendeur avec abonnement actif).
+// La recherche par texte (q) tolère les fautes de frappe : on tente d'abord
+// une correspondance stricte, puis on élargit avec un classement approximatif
+// si la recherche stricte ne donne rien.
 export async function GET(req: NextRequest) {
-  const q = req.nextUrl.searchParams.get("q") || undefined;
+  const q = req.nextUrl.searchParams.get("q")?.trim() || undefined;
   const categorie = req.nextUrl.searchParams.get("categorie") || undefined;
+  const type = req.nextUrl.searchParams.get("type") || undefined; // "photo" | "video" | "hot"
   const prixMin = req.nextUrl.searchParams.get("prixMin");
   const prixMax = req.nextUrl.searchParams.get("prixMax");
 
@@ -15,23 +24,69 @@ export async function GET(req: NextRequest) {
   if (prixMin) filtrePrix.gte = Number(prixMin);
   if (prixMax) filtrePrix.lte = Number(prixMax);
 
-  const produits = await prisma.produit.findMany({
+  const filtreType =
+    type === "photo" ? { videoUrl: null } : type === "video" ? { videoUrl: { not: null } } : {};
+
+  const filtreBase = {
+    visible: true,
+    ...(categorie ? { categorie } : {}),
+    ...(Object.keys(filtrePrix).length ? { prix: filtrePrix } : {}),
+    ...filtreType,
+  };
+
+  // Onglet "🔥" : articles mis en avant (promo ou boostés par l'admin)
+  if (type === "hot" && !q) {
+    const produits = await prisma.produit.findMany({
+      where: { ...filtreBase, OR: [{ enPromo: true }, { boost: true }] },
+      include: { vendeur: SELECTION_VENDEUR },
+      orderBy: [{ enPromo: "desc" }, { boost: "desc" }, { createdAt: "desc" }],
+      take: 60,
+    });
+    return NextResponse.json({ produits });
+  }
+
+  if (!q) {
+    const produits = await prisma.produit.findMany({
+      where: filtreBase,
+      include: { vendeur: SELECTION_VENDEUR },
+      orderBy: [{ boost: "desc" }, { createdAt: "desc" }],
+      take: 60,
+    });
+    return NextResponse.json({ produits });
+  }
+
+  // --- Passe 1 : correspondance stricte (rapide, sur titre/nature/boutique) ---
+  const correspondanceStricte = await prisma.produit.findMany({
     where: {
-      visible: true,
-      ...(q ? { titre: { contains: q, mode: "insensitive" } } : {}),
-      ...(categorie ? { categorie } : {}),
-      ...(Object.keys(filtrePrix).length ? { prix: filtrePrix } : {}),
+      ...filtreBase,
+      OR: [
+        { titre: { contains: q, mode: "insensitive" } },
+        { nature: { contains: q, mode: "insensitive" } },
+        { vendeur: { nomBoutique: { contains: q, mode: "insensitive" } } },
+      ],
     },
-    include: {
-      vendeur: {
-        select: { id: true, nomBoutique: true, logoUrl: true, utilisateur: { select: { whatsapp: true } } },
-      },
-    },
-    orderBy: [{ boost: "desc" }, { createdAt: "desc" }],
+    include: { vendeur: SELECTION_VENDEUR },
+    orderBy: [{ enPromo: "desc" }, { boost: "desc" }, { createdAt: "desc" }],
     take: 60,
   });
 
-  return NextResponse.json({ produits });
+  if (correspondanceStricte.length > 0) {
+    return NextResponse.json({ produits: correspondanceStricte });
+  }
+
+  // --- Passe 2 : fautes de frappe — on élargit et on classe par similarité ---
+  const candidats = await prisma.produit.findMany({
+    where: filtreBase,
+    include: { vendeur: SELECTION_VENDEUR },
+    orderBy: { createdAt: "desc" },
+    take: 500,
+  });
+
+  const classes = classerParPertinence(q, candidats, (p) =>
+    [p.titre, p.nature || "", p.categorie || "", p.vendeur.nomBoutique].join(" ")
+  ).slice(0, 60);
+
+  return NextResponse.json({ produits: classes });
 }
 
 // POST /api/produits — un vendeur ajoute un produit (visible = statut de son abonnement)
@@ -82,6 +137,8 @@ export async function POST(req: NextRequest) {
       videoUrl: body.videoUrl || null,
       videoPublicId: body.videoPublicId || null,
       statutStock,
+      nature: body.nature || null,
+      enPromo: Boolean(body.enPromo),
       visible: abonnementActif,
     },
   });

@@ -12,9 +12,19 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "seed:admin": "tsx scripts/creer-admin.ts",
-    "cron:abonnements": "tsx scripts/verifier-abonnements.ts"
+    "cron:abonnements": "tsx scripts/verifier-abonnements.ts",
+    "cap:add:android": "npx cap add android",
+    "cap:add:ios": "npx cap add ios",
+    "cap:sync": "npx cap sync",
+    "cap:assets": "npx capacitor-assets generate",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
     "@prisma/client": "^6.16.1",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.1",
@@ -27,6 +37,7 @@
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^18",

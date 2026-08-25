@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Heart, MessageCircle, Volume2, VolumeX, Store } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
-import { classesBadgeStock, labelStatutStock, StatutStock } from "@/lib/stock";
+import { classesBadgeStock, labelStatutStock, StatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
 
 type Produit = {
   id: string;
@@ -12,6 +12,7 @@ type Produit = {
   prix: number;
   videoUrl: string | null;
   statutStock: StatutStock;
+  enPromo: boolean;
   vendeur: { id: string; nomBoutique: string; utilisateur: { whatsapp: string } };
 };
 
@@ -54,13 +55,13 @@ export default function FeedVideosCourtes({ produits }: { produits: Produit[] })
     <div
       ref={conteneurRef}
       className="snap-y snap-mandatory overflow-y-auto scrollbar-none bg-black"
-      style={{ height: "calc(100dvh - 112px)" }}
+      style={{ height: "calc(100dvh - var(--mobile-header-h) - var(--mobile-navbar-h) - env(safe-area-inset-bottom))" }}
     >
       {produits.map((p) => (
         <div
           key={p.id}
           className="relative snap-start w-full flex items-center justify-center bg-indigo-950"
-          style={{ height: "calc(100dvh - 112px)" }}
+          style={{ height: "calc(100dvh - var(--mobile-header-h) - var(--mobile-navbar-h) - env(safe-area-inset-bottom))" }}
         >
           {p.videoUrl ? (
             <video
@@ -79,12 +80,19 @@ export default function FeedVideosCourtes({ produits }: { produits: Produit[] })
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/30" />
 
-          {/* Pastille néon "vidéo courte" */}
-          <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-black/40 backdrop-blur px-2.5 py-1 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-neonpink-500 neon-dot" />
-            <span className="text-[10px] font-mono uppercase tracking-widest text-white/90">
-              vidéo courte
-            </span>
+          {/* Pastille néon "vidéo courte" + Promo */}
+          <div className="absolute top-4 left-4 flex flex-col gap-1.5 items-start">
+            <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur px-2.5 py-1 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-neonpink-500 neon-dot" />
+              <span className="text-[10px] font-mono uppercase tracking-widest text-white/90">
+                vidéo courte
+              </span>
+            </div>
+            {p.enPromo && (
+              <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
+                {LABEL_BADGE_PROMO}
+              </span>
+            )}
           </div>
 
           {/* Son on/off */}
