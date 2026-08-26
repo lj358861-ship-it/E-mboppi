@@ -51,6 +51,28 @@ export async function verifierAbonnementsExpires() {
 }
 
 /**
+ * Repère les abonnements ACTIFS qui expirent dans JOURS_AVANT_RAPPEL jours
+ * ou moins, et pas encore relancés — à utiliser par le cron de rappel
+ * (scripts/rappel-abonnements.ts) pour notifier le vendeur avant qu'il ne
+ * découvre l'expiration en ouvrant son tableau de bord.
+ */
+export const JOURS_AVANT_RAPPEL = 3;
+
+export async function abonnementsARappeler() {
+  const dansNJours = new Date();
+  dansNJours.setDate(dansNJours.getDate() + JOURS_AVANT_RAPPEL);
+
+  return prisma.abonnement.findMany({
+    where: { statut: "ACTIF", rappelEnvoye: false, dateFin: { lte: dansNJours, gt: new Date() } },
+    include: { vendeur: { include: { utilisateur: true } } },
+  });
+}
+
+export async function marquerRappelEnvoye(abonnementId: string) {
+  await prisma.abonnement.update({ where: { id: abonnementId }, data: { rappelEnvoye: true } });
+}
+
+/**
  * Validation d'un paiement par l'admin : réactive l'abonnement pour 30 jours
  * et rend les produits du vendeur visibles à nouveau.
  */
@@ -66,6 +88,7 @@ export async function validerPaiement(abonnementId: string, adminId: string) {
       dateFin,
       valideParAdminId: adminId,
       dateValidation: new Date(),
+      rappelEnvoye: false,
     },
   });
 

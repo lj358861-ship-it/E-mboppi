@@ -1,12 +1,12 @@
 import { prisma } from "@/lib/prisma";
-import { lireSession } from "@/lib/auth";
 import { lienContacterVendeur } from "@/lib/whatsapp";
 import { estVendeurVerifie } from "@/lib/abonnement";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import type { Metadata } from "next";
 import { Store, Tag, MapPin, Flame } from "lucide-react";
 import { classesBadgeStock, labelStatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
-import EcrireAuVendeur from "./EcrireAuVendeur";
 import GalerieProduit from "./GalerieProduit";
 import BoutonFermer from "./BoutonFermer";
 import BoutonContacterWhatsapp from "@/components/BoutonContacterWhatsapp";
@@ -14,6 +14,40 @@ import BoutonPartager from "@/components/BoutonPartager";
 import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
 
 export const dynamic = "force-dynamic";
+
+// Métadonnées propres à chaque article : quand un vendeur ou un client
+// partage un lien produit sur WhatsApp, l'aperçu affiche sa vraie photo et
+// son prix au lieu du nom générique du site (app/layout.tsx).
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const produit = await prisma.produit.findUnique({
+    where: { id: params.id },
+    select: { titre: true, description: true, prix: true, photos: true, vendeur: { select: { nomBoutique: true } } },
+  });
+
+  if (!produit) return { title: "Article introuvable" };
+
+  const titre = `${produit.titre} — ${produit.prix.toLocaleString("fr-FR")} F`;
+  const description =
+    produit.description?.slice(0, 160) ||
+    `En vente chez ${produit.vendeur.nomBoutique} sur E-Mboppi, le marché Mboppi en ligne.`;
+  const image = produit.photos[0];
+
+  return {
+    title: titre,
+    description,
+    openGraph: {
+      title: titre,
+      description,
+      images: image ? [{ url: image, width: 800, height: 800, alt: produit.titre }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: titre,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
 
 export default async function PageProduit({ params }: { params: { id: string } }) {
   const produit = await prisma.produit.findUnique({
@@ -34,7 +68,6 @@ export default async function PageProduit({ params }: { params: { id: string } }
   // Ne bloque jamais l'affichage de la page si ça échoue.
   prisma.produit.update({ where: { id: produit.id }, data: { vues: { increment: 1 } } }).catch(() => {});
 
-  const session = lireSession();
   const verifie = estVendeurVerifie(produit.vendeur, produit.vendeur.abonnements[0]);
   const urlProduit = `${process.env.NEXT_PUBLIC_SITE_URL || "https://e-mboppi-production.up.railway.app"}/produit/${produit.id}`;
 
@@ -49,10 +82,9 @@ export default async function PageProduit({ params }: { params: { id: string } }
           href={`/vendeur/${produit.vendeur.id}`}
           className="flex items-start gap-3 mb-4 w-fit group bg-stone-50 border border-stone-200 rounded-2xl p-3"
         >
-          <span className="w-11 h-11 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
+          <span className="relative w-11 h-11 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
             {produit.vendeur.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={produit.vendeur.logoUrl} alt={produit.vendeur.nomBoutique} className="w-full h-full object-cover" />
+              <Image src={produit.vendeur.logoUrl} alt={produit.vendeur.nomBoutique} fill sizes="44px" className="object-cover" />
             ) : (
               <Store size={16} className="text-indigo-900/40" />
             )}
@@ -117,11 +149,6 @@ export default async function PageProduit({ params }: { params: { id: string } }
             href={lienContacterVendeur(produit.vendeur.utilisateur.whatsapp, produit.titre)}
             className="flex items-center gap-2 bg-feuille-500 hover:bg-feuille-600 transition-colors text-white px-5 py-3 rounded-full font-medium text-sm"
           />
-          <EcrireAuVendeur
-            vendeurUtilisateurId={produit.vendeur.utilisateur.id}
-            moiId={session?.id ?? null}
-            titreProduit={produit.titre}
-          />
           <BoutonPartager titre={produit.titre} url={urlProduit} />
         </div>
       </div>
@@ -136,12 +163,6 @@ export default async function PageProduit({ params }: { params: { id: string } }
           produitId={produit.id}
           href={lienContacterVendeur(produit.vendeur.utilisateur.whatsapp, produit.titre)}
           className="flex-1 flex items-center justify-center gap-2 bg-feuille-500 active:bg-feuille-600 transition-colors text-white px-4 py-2.5 rounded-full font-medium text-sm"
-        />
-        <EcrireAuVendeur
-          vendeurUtilisateurId={produit.vendeur.utilisateur.id}
-          moiId={session?.id ?? null}
-          titreProduit={produit.titre}
-          compact
         />
         <BoutonPartager titre={produit.titre} url={urlProduit} compact />
       </div>

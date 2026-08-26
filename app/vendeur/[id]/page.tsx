@@ -1,15 +1,48 @@
 import { prisma } from "@/lib/prisma";
 import { lireIdAppareil } from "@/lib/appareil";
 import { notFound } from "next/navigation";
-import { MapPin, MessageCircle, Store, Tag, Heart, CalendarDays } from "lucide-react";
+import Image from "next/image";
+import type { Metadata } from "next";
+import { MapPin, MessageCircle, Store, Tag, Heart, CalendarDays, Star } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
 import { estVendeurVerifie } from "@/lib/abonnement";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
 import BoutonSuivreBoutique from "@/components/BoutonSuivreBoutique";
 import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
 import BoutonPartager from "@/components/BoutonPartager";
+import AvisBoutique from "@/components/AvisBoutique";
 
 export const dynamic = "force-dynamic";
+
+// Aperçu WhatsApp/Google propre à chaque boutique (logo + description) au
+// lieu du titre générique du site quand un lien de boutique est partagé.
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const vendeur = await prisma.vendeur.findUnique({
+    where: { id: params.id },
+    select: { nomBoutique: true, description: true, logoUrl: true, ville: true },
+  });
+
+  if (!vendeur) return { title: "Boutique introuvable" };
+
+  const titre = `${vendeur.nomBoutique}${vendeur.ville ? ` — ${vendeur.ville}` : ""}`;
+  const description = vendeur.description || `Découvrez les articles de ${vendeur.nomBoutique} sur E-Mboppi.`;
+
+  return {
+    title: titre,
+    description,
+    openGraph: {
+      title: titre,
+      description,
+      images: vendeur.logoUrl ? [{ url: vendeur.logoUrl, width: 400, height: 400, alt: vendeur.nomBoutique }] : undefined,
+    },
+    twitter: {
+      card: "summary",
+      title: titre,
+      description,
+      images: vendeur.logoUrl ? [vendeur.logoUrl] : undefined,
+    },
+  };
+}
 
 export default async function ProfilVendeur({ params }: { params: { id: string } }) {
   const vendeur = await prisma.vendeur.findUnique({
@@ -39,12 +72,15 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
         )
       : new Set<string>();
 
-  const [suiviExistant, nbSuivis] = await Promise.all([
+  const [suiviExistant, nbSuivis, statsAvis] = await Promise.all([
     appareilId
       ? prisma.suivi.findUnique({ where: { appareilId_vendeurId: { appareilId, vendeurId: vendeur.id } } })
       : null,
     prisma.suivi.count({ where: { vendeurId: vendeur.id } }),
+    prisma.avis.aggregate({ where: { vendeurId: vendeur.id }, _avg: { note: true }, _count: true }),
   ]);
+  const noteMoyenne = statsAvis._avg.note || 0;
+  const nbAvis = statsAvis._count;
 
   const verifie = estVendeurVerifie(vendeur, vendeur.abonnements[0]);
   const urlBoutique = `${process.env.NEXT_PUBLIC_SITE_URL || "https://e-mboppi-production.up.railway.app"}/vendeur/${vendeur.id}`;
@@ -64,8 +100,7 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
           <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-2 pt-3">
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-md">
               {vendeur.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={vendeur.logoUrl} alt={vendeur.nomBoutique} className="w-full h-full object-cover" />
+                <Image src={vendeur.logoUrl} alt={vendeur.nomBoutique} fill sizes="96px" className="object-cover" />
               ) : (
                 <Store size={32} className="text-indigo-900/30" />
               )}
@@ -90,6 +125,11 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
 
           {/* Statistiques en pastilles colorées — remplace la ligne de texte gris */}
           <div className="flex flex-wrap gap-2 mt-4">
+            {nbAvis > 0 && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-mango-600 bg-mango-500/10 px-3 py-1.5 rounded-full">
+                <Star size={13} className="fill-mango-500 text-mango-500" /> {noteMoyenne.toFixed(1)} ({nbAvis})
+              </span>
+            )}
             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-neon-700 bg-neon-300/30 px-3 py-1.5 rounded-full">
               <Tag size={13} /> {nbProduits} article{nbProduits > 1 ? "s" : ""}
             </span>
@@ -157,6 +197,8 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
           ))}
         </div>
       )}
+
+      <AvisBoutique vendeurId={vendeur.id} />
     </div>
   );
 }

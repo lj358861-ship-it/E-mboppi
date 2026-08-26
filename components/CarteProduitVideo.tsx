@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heart, MessageCircle, Flame, MapPin } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
@@ -70,8 +71,13 @@ export default function CarteProduitVideo({
           className="absolute inset-0 w-full h-full object-cover"
         />
       ) : imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl} alt={titre} className="absolute inset-0 w-full h-full object-cover" />
+        <Image
+          src={imageUrl}
+          alt={titre}
+          fill
+          sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, 50vw"
+          className="object-cover"
+        />
       ) : (
         <div className="absolute inset-0 bg-indigo-900" />
       )}

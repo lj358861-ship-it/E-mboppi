@@ -32,6 +32,14 @@ export function lienNotifierPaiement(nomBoutique: string) {
   return `https://wa.me/${nettoyerNumero(ADMIN_WHATSAPP)}?text=${encodeURIComponent(message)}`;
 }
 
+/** Lien pour rappeler à un vendeur que son abonnement expire bientôt (relance proactive) */
+export function lienRappelExpiration(nomBoutique: string, joursRestants: number) {
+  const message = `Bonjour, votre abonnement E-Mboppi pour la boutique "${nomBoutique}" expire dans ${joursRestants} jour${
+    joursRestants > 1 ? "s" : ""
+  }. Pensez à le renouveler (2000F) pour que vos articles restent visibles par vos clients.`;
+  return `https://wa.me/${nettoyerNumero(ADMIN_WHATSAPP)}?text=${encodeURIComponent(message)}`;
+}
+
 /**
  * Lien pour demander à l'admin de booster un article précis (mise en avant
  * "Hot Sales" payante — le vendeur ne peut pas se l'attribuer lui-même,

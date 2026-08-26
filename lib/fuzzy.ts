@@ -100,3 +100,31 @@ export function classerParPertinence<T>(
     .sort((a, b) => b.score - a.score)
     .map((r) => r.item);
 }
+
+/**
+ * Variante multi-termes de `classerParPertinence` : le terme recherché a été
+ * élargi en plusieurs variantes (synonymes, camfranglais...) via
+ * `elargirTermeRecherche`. On garde, pour chaque candidat, le meilleur score
+ * obtenu parmi toutes les variantes — un candidat est pertinent dès qu'il
+ * correspond bien à AU MOINS une des formulations.
+ */
+export function classerParPertinenceMulti<T>(
+  termesRecherche: string[],
+  candidats: T[],
+  extraireTexte: (item: T) => string
+): T[] {
+  return candidats
+    .map((item) => {
+      const texte = extraireTexte(item);
+      let meilleur = 0;
+      for (const terme of termesRecherche) {
+        const s = scoreFuzzy(terme, texte);
+        if (s > meilleur) meilleur = s;
+        if (meilleur >= 0.99) break;
+      }
+      return { item, score: meilleur };
+    })
+    .filter((r) => r.score >= SEUIL_PERTINENCE)
+    .sort((a, b) => b.score - a.score)
+    .map((r) => r.item);
+}

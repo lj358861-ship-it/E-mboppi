@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { lireSession } from "@/lib/auth";
 import { lireIdAppareil } from "@/lib/appareil";
 import { PHOTOS_MAX_PAR_ARTICLE } from "@/lib/media-limits";
-import { classerParPertinence } from "@/lib/fuzzy";
+import { classerParPertinenceMulti } from "@/lib/fuzzy";
+import { elargirTermeRecherche } from "@/lib/synonymes";
 
 const SELECTION_VENDEUR = {
   select: {
@@ -35,9 +36,10 @@ async function avecFavoris<T extends { id: string }>(produits: T[]): Promise<(T 
 
 // GET /api/produits?q=chaussures&categorie=mode&nature=Homme&type=photo|video|hot&prixMin=1000&prixMax=5000
 // Ne retourne que les produits visibles (vendeur avec abonnement actif).
-// La recherche par texte (q) tolère les fautes de frappe : on tente d'abord
-// une correspondance stricte, puis on élargit avec un classement approximatif
-// si la recherche stricte ne donne rien.
+// La recherche par texte (q) se fait en 3 passes :
+//   1) correspondance stricte, élargie au champ lexical (synonymes)
+//   2) si rien : classement approximatif tolérant aux fautes de frappe
+//   3) si toujours rien : suggestions d'articles proches, jamais une page vide
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim() || undefined;
   const categorie = req.nextUrl.searchParams.get("categorie") || undefined;
@@ -91,15 +93,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ produits: await avecFavoris(produits.slice(0, TAILLE_PAGE)), hasMore });
   }
 
-  // --- Passe 1 : correspondance stricte (rapide, sur titre/nature/boutique) ---
+  // --- Passe 1 : correspondance stricte, élargie au champ lexical ---
+  // "portable" doit aussi trouver les articles titrés "smartphone", etc.
+  // (voir lib/synonymes.ts). Le terme tapé reste toujours en tête de liste.
+  const termesElargis = elargirTermeRecherche(q);
+
   const correspondanceStricte = await prisma.produit.findMany({
     where: {
       ...filtreBase,
-      OR: [
-        { titre: { contains: q, mode: "insensitive" } },
-        { nature: { contains: q, mode: "insensitive" } },
-        { vendeur: { nomBoutique: { contains: q, mode: "insensitive" } } },
-      ],
+      OR: termesElargis.flatMap((t) => [
+        { titre: { contains: t, mode: "insensitive" as const } },
+        { nature: { contains: t, mode: "insensitive" as const } },
+        { categorie: { contains: t, mode: "insensitive" as const } },
+        { vendeur: { nomBoutique: { contains: t, mode: "insensitive" as const } } },
+      ]),
     },
     include: { vendeur: SELECTION_VENDEUR },
     orderBy: [{ boost: "desc" }, { createdAt: "desc" }],
@@ -115,7 +122,8 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // --- Passe 2 : fautes de frappe — on élargit et on classe par similarité ---
+  // --- Passe 2 : fautes de frappe — on élargit et on classe par similarité,
+  // en testant le terme tapé ET ses synonymes, on garde le meilleur score ---
   // (Le classement par pertinence se fait sur un lot large, donc la pagination
   // se fait ensuite en mémoire sur le résultat déjà trié.)
   const candidats = await prisma.produit.findMany({
@@ -125,13 +133,39 @@ export async function GET(req: NextRequest) {
     take: 500,
   });
 
-  const classes = classerParPertinence(q, candidats, (p) =>
+  const classes = classerParPertinenceMulti(termesElargis, candidats, (p) =>
     [p.titre, p.nature || "", p.categorie || "", p.vendeur.nomBoutique].join(" ")
   );
-  const page = classes.slice(skip, skip + TAILLE_PAGE);
-  const hasMore = classes.length > skip + TAILLE_PAGE;
 
-  return NextResponse.json({ produits: await avecFavoris(page), hasMore });
+  if (classes.length > 0) {
+    const page = classes.slice(skip, skip + TAILLE_PAGE);
+    const hasMore = classes.length > skip + TAILLE_PAGE;
+    return NextResponse.json({ produits: await avecFavoris(page), hasMore });
+  }
+
+  // --- Passe 3 : filet de sécurité — vraiment aucune correspondance, même
+  // approximative. Plutôt qu'une page vide, on propose des articles proches :
+  // même catégorie/sous-catégorie si les filtres actifs le permettent, sinon
+  // les articles du moment. On le signale via `suggestionsFallback` pour que
+  // le client affiche "Aucun résultat exact, mais voici..." au lieu d'une
+  // simple absence de résultat.
+  const suggestions = await prisma.produit.findMany({
+    where: {
+      visible: true,
+      ...(categorie ? { categorie } : {}),
+      ...(nature ? { nature } : {}),
+      ...filtreType,
+    },
+    include: { vendeur: SELECTION_VENDEUR },
+    orderBy: [{ boost: "desc" }, { createdAt: "desc" }],
+    take: TAILLE_PAGE,
+  });
+
+  return NextResponse.json({
+    produits: await avecFavoris(suggestions),
+    hasMore: false,
+    suggestionsFallback: true,
+  });
 }
 
 // POST /api/produits — un vendeur ajoute un produit (visible = statut de son abonnement)

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Pencil, Trash2, ImagePlus, Video, X, Zap, Eye, MousePointerClick } from "lucide-react";
 import { CATEGORIES, sousCategoriesPour } from "@/lib/categories";
 import { OPTIONS_STATUT_STOCK, classesBadgeStock, labelStatutStock, StatutStock } from "@/lib/stock";
@@ -68,10 +69,9 @@ export default function MesArticles({ produits, nomBoutique }: { produits: Artic
             key={p.id}
             className="flex items-center gap-3 bg-white border border-stone-200 rounded-xl px-4 py-3"
           >
-            <div className="w-12 h-12 rounded-lg overflow-hidden bg-stone-100 flex-shrink-0">
+            <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-stone-100 flex-shrink-0">
               {p.photos[0] ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={p.photos[0]} alt={p.titre} className="w-full h-full object-cover" />
+                <Image src={p.photos[0]} alt={p.titre} fill sizes="48px" className="object-cover" />
               ) : p.videoUrl ? (
                 <video src={p.videoUrl} muted className="w-full h-full object-cover" />
               ) : null}

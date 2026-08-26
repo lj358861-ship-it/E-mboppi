@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { elargirTermeRecherche } from "@/lib/synonymes";
 
 // GET /api/recherche/suggestions?q=chau — courtes suggestions pour
 // l'autocomplétion de la barre de recherche (titres d'articles, sous-
@@ -8,11 +9,18 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim();
   if (!q || q.length < 2) return NextResponse.json({ suggestions: [] });
 
+  // On élargit aussi l'autocomplétion au champ lexical : taper "portable"
+  // doit déjà faire remonter des titres contenant "smartphone".
+  const termes = elargirTermeRecherche(q);
+
   const [produits, boutiques] = await Promise.all([
     prisma.produit.findMany({
       where: {
         visible: true,
-        OR: [{ titre: { contains: q, mode: "insensitive" } }, { nature: { contains: q, mode: "insensitive" } }],
+        OR: termes.flatMap((t) => [
+          { titre: { contains: t, mode: "insensitive" as const } },
+          { nature: { contains: t, mode: "insensitive" as const } },
+        ]),
       },
       select: { titre: true, nature: true },
       take: 20,

@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Identifiant d'appareil — E-Mboppi
@@ -10,6 +11,12 @@ import { randomUUID } from "crypto";
  * Résultat : un article marqué favori le reste sur cet appareil — pas
  * besoin de le remarquer, le cœur apparaît déjà rempli partout où
  * l'article est affiché (accueil, recherche, boutique...).
+ *
+ * Chaque appareil reçoit aussi un pseudo généré automatiquement (ex.
+ * "AcheteurMalin4821"), modifiable à tout moment depuis /mon-profil — voir
+ * ProfilAppareil dans prisma/schema.prisma. Toujours pas besoin de compte :
+ * juste un nom sympathique attaché à l'appareil plutôt qu'un identifiant
+ * technique.
  */
 
 const COOKIE_APPAREIL = "e_mboppi_appareil";
@@ -39,4 +46,37 @@ export function idAppareil(): string {
     path: "/",
   });
   return id;
+}
+
+const ADJECTIFS_PSEUDO = [
+  "Malin", "Rapide", "Futé", "Chic", "Vif", "Gentil", "Curieux", "Habile",
+  "Joyeux", "Discret", "Astucieux", "Élégant", "Généreux", "Radieux",
+];
+const NOMS_PSEUDO = [
+  "Acheteur", "Client", "Visiteur", "Explorateur", "Chineur", "Fan", "Amateur", "Curieux",
+];
+
+/** Génère un pseudo par défaut sympathique, ex. "AcheteurMalin4821". */
+function genererPseudo(): string {
+  const nom = NOMS_PSEUDO[Math.floor(Math.random() * NOMS_PSEUDO.length)];
+  const adjectif = ADJECTIFS_PSEUDO[Math.floor(Math.random() * ADJECTIFS_PSEUDO.length)];
+  const numero = Math.floor(1000 + Math.random() * 9000);
+  return `${nom}${adjectif}${numero}`;
+}
+
+/**
+ * Lit le profil (pseudo) de cet appareil, et le crée avec un pseudo
+ * généré automatiquement s'il n'existe pas encore. C'est ce que /mon-profil
+ * et /api/appareil utilisent pour afficher/éditer le pseudo du client, sans
+ * jamais lui demander de créer un compte.
+ */
+export async function obtenirProfilAppareil() {
+  const appareilId = idAppareil();
+
+  const existant = await prisma.profilAppareil.findUnique({ where: { appareilId } });
+  if (existant) return existant;
+
+  return prisma.profilAppareil.create({
+    data: { appareilId, pseudo: genererPseudo() },
+  });
 }

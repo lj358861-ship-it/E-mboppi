@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Loader2, Store } from "lucide-react";
 
 export default function ProfilBoutique({
@@ -76,8 +77,7 @@ export default function ProfilBoutique({
           {envoiLogo ? (
             <Loader2 size={18} className="animate-spin text-indigo-900/40" />
           ) : logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logo} alt={nomBoutique} className="w-full h-full object-cover" />
+            <Image src={logo} alt={nomBoutique} fill sizes="64px" className="object-cover" />
           ) : (
             <Store size={22} className="text-indigo-900/30" />
           )}

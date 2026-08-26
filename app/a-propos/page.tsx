@@ -1,3 +1,4 @@
+import Image from "next/image";
 import AProposClient from "./AProposClient";
 
 export const metadata = {
@@ -38,10 +39,11 @@ export default function APropos() {
       <section className="mb-10 bg-indigo-950 rounded-2xl p-6 md:p-8 relative overflow-hidden">
         <div className="neon-blob bg-neon-600 w-56 h-56 -top-16 -right-16 opacity-40" />
         <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/kmer-vision-logo.png"
             alt="Kmer Vision"
+            width={128}
+            height={128}
             className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl object-cover flex-shrink-0 neon-border"
           />
           <div>

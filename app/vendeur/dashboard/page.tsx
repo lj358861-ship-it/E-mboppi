@@ -1,15 +1,15 @@
 import { prisma } from "@/lib/prisma";
 import { lireSession } from "@/lib/auth";
-import { joursRestants, MONTANT_ABONNEMENT, estVendeurVerifie } from "@/lib/abonnement";
+import { joursRestants, MONTANT_ABONNEMENT, estVendeurVerifie, JOURS_AVANT_RAPPEL } from "@/lib/abonnement";
 import { lienNotifierPaiement } from "@/lib/whatsapp";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, CheckCircle2, MessageCircle, Store, Eye, MousePointerClick } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, MessageCircle, Store, Eye, MousePointerClick, UserCircle } from "lucide-react";
 import ProduitForm from "./ProduitForm";
 import ProfilBoutique from "./ProfilBoutique";
 import MesArticles from "./MesArticles";
-import BadgeMessagesNonLus from "@/components/BadgeMessagesNonLus";
 import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
+import ActiverNotifications from "@/components/ActiverNotifications";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +43,13 @@ export default async function DashboardVendeur() {
           {verifie && <BadgeVendeurVerifie taille={13} />}
         </div>
         <div className="flex items-center gap-4">
-          <BadgeMessagesNonLus />
+          <ActiverNotifications clePubliqueVapid={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null} />
+          <Link
+            href="/vendeur/profil"
+            className="flex items-center gap-1.5 text-xs font-medium text-indigo-900/60 hover:text-indigo-900"
+          >
+            <UserCircle size={14} /> Mon profil
+          </Link>
           <Link
             href={`/vendeur/${vendeur.id}`}
             target="_blank"
@@ -55,7 +61,7 @@ export default async function DashboardVendeur() {
       </div>
       <p className="text-sm text-indigo-900/60 mb-6">Tableau de bord vendeur</p>
 
-      {actif ? (
+      {actif && jours > JOURS_AVANT_RAPPEL ? (
         <div className="flex items-start gap-3 bg-feuille-500/10 border border-feuille-500/30 rounded-2xl p-4 mb-6">
           <CheckCircle2 className="text-feuille-500 flex-shrink-0 mt-0.5" size={20} />
           <div>
@@ -64,6 +70,25 @@ export default async function DashboardVendeur() {
               Il vous reste <strong>{jours} jour{jours > 1 ? "s" : ""}</strong> avant le
               renouvellement. Vos articles restent visibles sur E-Mboppi.
             </p>
+          </div>
+        </div>
+      ) : actif ? (
+        <div className="flex items-start gap-3 bg-mango-500/10 border border-mango-500/30 rounded-2xl p-4 mb-6">
+          <Clock className="text-mango-500 flex-shrink-0 mt-0.5" size={20} />
+          <div className="flex-1">
+            <p className="font-medium text-indigo-900">Renouvellement bientôt nécessaire</p>
+            <p className="text-sm text-indigo-900/70 mb-3">
+              Il ne vous reste que <strong>{jours} jour{jours > 1 ? "s" : ""}</strong> avant que vos
+              articles ne disparaissent du site. Renouvelez dès maintenant pour éviter toute coupure.
+            </p>
+            <a
+              href={lienNotifierPaiement(vendeur.nomBoutique)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-mango-500 hover:bg-mango-600 transition-colors text-white px-4 py-2.5 rounded-full text-sm font-medium"
+            >
+              <MessageCircle size={16} /> Renouveler via WhatsApp
+            </a>
           </div>
         </div>
       ) : (

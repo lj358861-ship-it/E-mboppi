@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, Clapperboard, Mail, Info, Store, Heart, LogIn } from "lucide-react";
+import { Home, Search, Clapperboard, Mail, Info, Store, Heart, LogIn, User } from "lucide-react";
 
 const liensBas = [
   { href: "/", label: "Accueil", icone: Home },
@@ -21,8 +22,26 @@ const liensDesktop = [
   { href: "/a-propos", label: "À propos" },
 ];
 
+type Session = { connecte: boolean; role?: "CLIENT" | "VENDEUR" | "ADMIN"; nom?: string };
+
 export default function Navigation() {
   const pathname = usePathname();
+  // Session vendeur/admin — lue côté client pour adapter le menu (afficher
+  // "Mon profil" plutôt que "Connexion") sans jamais déconnecter qui que ce
+  // soit : la session reste vivante tant que le middleware la rafraîchit
+  // (voir middleware.ts). null = pas encore vérifié.
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((r) => r.json())
+      .then(setSession)
+      .catch(() => setSession({ connecte: false }));
+  }, []);
+
+  const estVendeurConnecte = session?.connecte && (session.role === "VENDEUR" || session.role === "ADMIN");
+  const hrefProfilVendeur = session?.role === "ADMIN" ? "/admin" : "/vendeur/profil";
+  const hrefProfil = estVendeurConnecte ? hrefProfilVendeur : "/mon-profil";
 
   return (
     <>
@@ -45,35 +64,71 @@ export default function Navigation() {
               {l.label}
             </Link>
           ))}
-        </nav>
-        <div className="flex items-center gap-3">
           <Link
-            href="/vendeur/connexion"
-            className={`text-sm font-medium transition-colors ${
-              pathname === "/vendeur/connexion" ? "text-neon-600" : "text-indigo-900/70 hover:text-indigo-900"
+            href={hrefProfil}
+            className={`transition-colors ${
+              pathname === hrefProfil ? "text-neon-600" : "text-indigo-900/70 hover:text-indigo-900"
             }`}
           >
-            Connexion
+            Mon profil
           </Link>
-          <Link href="/a-propos#devenir-vendeur" className="btn-neon px-4 py-2 text-sm font-medium">
-            <Store size={16} /> Devenir vendeur
-          </Link>
+        </nav>
+        <div className="flex items-center gap-3">
+          {estVendeurConnecte ? (
+            <Link
+              href={hrefProfilVendeur}
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                pathname === hrefProfilVendeur ? "text-neon-600" : "text-indigo-900/70 hover:text-indigo-900"
+              }`}
+            >
+              <Store size={16} /> {session?.nom ? `Bonjour, ${session.nom}` : "Ma boutique"}
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/vendeur/connexion"
+                className={`text-sm font-medium transition-colors ${
+                  pathname === "/vendeur/connexion" ? "text-neon-600" : "text-indigo-900/70 hover:text-indigo-900"
+                }`}
+              >
+                Connexion
+              </Link>
+              <Link href="/a-propos#devenir-vendeur" className="btn-neon px-4 py-2 text-sm font-medium">
+                <Store size={16} /> Devenir vendeur
+              </Link>
+            </>
+          )}
         </div>
       </header>
 
       {/* Mobile top bar */}
       <header className="md:hidden sticky top-0 z-40 flex items-center justify-between h-14 px-4 bg-indigo-950/95 backdrop-blur border-b border-white/5">
-        <Link href="/vendeur/connexion" aria-label="Connexion" className="text-white/80">
-          <LogIn size={20} className={pathname === "/vendeur/connexion" ? "text-neon-400" : ""} />
+        <Link
+          href={estVendeurConnecte ? hrefProfilVendeur : "/vendeur/connexion"}
+          aria-label={estVendeurConnecte ? "Ma boutique" : "Connexion"}
+          className="text-white/80"
+        >
+          {estVendeurConnecte ? (
+            <Store size={20} className={pathname === hrefProfilVendeur ? "text-neon-400" : ""} />
+          ) : (
+            <LogIn size={20} className={pathname === "/vendeur/connexion" ? "text-neon-400" : ""} />
+          )}
         </Link>
         <Link href="/" className="font-display text-xl font-semibold tracking-tight text-white logo-glow-pulse">
           <span className="italic">E</span>
           <span className="text-neon-400">-</span>
           <span className="logo-gradient">Mboppi</span>
         </Link>
-        <Link href="/favoris" aria-label="Favoris" className="text-white/80">
-          <Heart size={20} className={pathname === "/favoris" ? "fill-piment-500 text-piment-500" : ""} />
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/favoris" aria-label="Favoris" className="text-white/80">
+            <Heart size={20} className={pathname === "/favoris" ? "fill-piment-500 text-piment-500" : ""} />
+          </Link>
+          {!estVendeurConnecte && (
+            <Link href="/mon-profil" aria-label="Mon profil" className="text-white/80">
+              <User size={20} className={pathname === "/mon-profil" ? "text-neon-400" : ""} />
+            </Link>
+          )}
+        </div>
       </header>
 
       {/* Mobile bottom nav — façon TikTok */}

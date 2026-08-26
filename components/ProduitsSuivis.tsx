@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Store } from "lucide-react";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
 import { StatutStock } from "@/lib/stock";
@@ -87,10 +88,9 @@ export default function ProduitsSuivis() {
             href={`/vendeur/${v.id}`}
             className="flex items-center gap-1.5 bg-white border border-stone-200 rounded-full pl-1 pr-3 py-1 text-xs font-medium text-indigo-900/70 hover:border-indigo-800 transition-colors flex-shrink-0"
           >
-            <span className="w-6 h-6 rounded-full overflow-hidden bg-stone-100 flex items-center justify-center flex-shrink-0">
+            <span className="relative w-6 h-6 rounded-full overflow-hidden bg-stone-100 flex items-center justify-center flex-shrink-0">
               {v.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={v.logoUrl} alt={v.nomBoutique} className="w-full h-full object-cover" />
+                <Image src={v.logoUrl} alt={v.nomBoutique} fill sizes="24px" className="object-cover" />
               ) : (
                 <Store size={12} className="text-indigo-900/30" />
               )}

@@ -39,9 +39,27 @@ model Utilisateur {
 
   vendeur        Vendeur?
 
-  messagesEnvoyes    Message[] @relation("MessagesEnvoyes")
-  messagesRecus      Message[] @relation("MessagesRecus")
   favoris            Favori[]
+  abonnementsPush    AbonnementPush[]
+}
+
+// Souscription aux notifications push du navigateur (Web Push standard,
+// via le service worker de la PWA — public/sw.js). Permet d'alerter un
+// vendeur AVANT qu'il n'ouvre son tableau de bord, sans dépendre de l'API
+// WhatsApp Business (non disponible pour ce MVP). Un même utilisateur peut
+// avoir plusieurs souscriptions (plusieurs appareils/navigateurs).
+model AbonnementPush {
+  id            String      @id @default(cuid())
+  utilisateurId String
+  utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
+
+  endpoint      String      @unique
+  p256dh        String
+  auth          String
+
+  createdAt     DateTime    @default(now())
+
+  @@index([utilisateurId])
 }
 
 model Vendeur {
@@ -59,6 +77,7 @@ model Vendeur {
   produits        Produit[]
   abonnements     Abonnement[]
   suivis          Suivi[]
+  avis            Avis[]
 }
 
 model Abonnement {
@@ -75,6 +94,11 @@ model Abonnement {
   numeroTransaction String?
   valideParAdminId  String?
   dateValidation    DateTime?
+
+  // Évite de renvoyer plusieurs fois le même rappel de renouvellement
+  // (WhatsApp, 3 jours avant expiration) — remis à false à chaque
+  // renouvellement (voir lib/abonnement.ts::validerPaiement).
+  rappelEnvoye      Boolean  @default(false)
 
   createdAt         DateTime @default(now())
 
@@ -138,18 +162,39 @@ model Suivi {
   @@index([vendeurId])
 }
 
-model Message {
-  id             String   @id @default(cuid())
-  expediteurId   String
-  expediteur     Utilisateur @relation("MessagesEnvoyes", fields: [expediteurId], references: [id])
-  destinataireId String
-  destinataire   Utilisateur @relation("MessagesRecus", fields: [destinataireId], references: [id])
+// Avis client sur une boutique — étoiles + commentaire court. Sur un
+// marché où l'identité n'est pas vérifiée par pièce, c'est le signal de
+// confiance le plus simple avant de contacter un vendeur inconnu.
+// Un seul avis par appareil et par boutique (anonyme, pas besoin de compte,
+// même logique que Favori/Suivi).
+model Avis {
+  id          String   @id @default(cuid())
+  vendeurId   String
+  vendeur     Vendeur  @relation(fields: [vendeurId], references: [id])
 
-  contenu        String
-  lu             Boolean  @default(false)
-  createdAt      DateTime @default(now())
+  appareilId  String
+  nomClient   String?
+  note        Int
+  commentaire String?
 
-  @@index([expediteurId, destinataireId])
+  createdAt   DateTime @default(now())
+
+  @@unique([appareilId, vendeurId])
+  @@index([vendeurId])
+}
+
+// Profil d'appareil — le pendant "identité" de Favori/Suivi/Avis : un
+// pseudo attribué automatiquement au premier passage sur cet appareil
+// (cookie anonyme longue durée, voir lib/appareil.ts), que le client peut
+// changer à tout moment depuis /mon-profil. Aucune création de compte
+// requise — c'est ce qui permet aux favoris, boutiques suivies et avis
+// d'afficher un nom plutôt qu'un identifiant technique.
+model ProfilAppareil {
+  id         String   @id @default(cuid())
+  appareilId String   @unique
+  pseudo     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Favori {

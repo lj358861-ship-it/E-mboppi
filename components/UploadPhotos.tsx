@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { ImagePlus, X, Loader2 } from "lucide-react";
 import { PHOTOS_MAX_PAR_ARTICLE as MAX_PHOTOS } from "@/lib/media-limits";
 
@@ -62,8 +63,7 @@ export default function UploadPhotos({
       <div className="grid grid-cols-5 gap-2 mb-2">
         {valeur.map((photo, i) => (
           <div key={photo.publicId} className="relative aspect-square rounded-xl overflow-hidden bg-stone-100">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={photo.url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+            <Image src={photo.url} alt={`Photo ${i + 1}`} fill sizes="80px" className="object-cover" />
             <button
               type="button"
               onClick={() => retirer(i)}

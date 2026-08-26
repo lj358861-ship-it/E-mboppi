@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { Clapperboard, ChevronLeft, ChevronRight } from "lucide-react";
 
 type Media = { type: "video" | "photo"; url: string };
@@ -72,7 +73,7 @@ export default function GalerieProduit({
           style={{ transform: `translateX(calc(-${indexActif * 100}% + ${glissementPx}px))` }}
         >
           {medias.map((m, i) => (
-            <div key={m.url + i} className="w-full h-full flex-shrink-0">
+            <div key={m.url + i} className="relative w-full h-full flex-shrink-0">
               {m.type === "video" ? (
                 <video
                   src={m.url}
@@ -83,8 +84,15 @@ export default function GalerieProduit({
                   className="w-full h-full object-contain bg-black"
                 />
               ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.url} alt={titre} className="w-full h-full object-contain" draggable={false} />
+                <Image
+                  src={m.url}
+                  alt={titre}
+                  fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  priority={i === 0}
+                  className="object-contain"
+                  draggable={false}
+                />
               )}
             </div>
           ))}
@@ -150,8 +158,7 @@ export default function GalerieProduit({
                   </span>
                 </>
               ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.url} alt="" className="w-full h-full object-cover" />
+                <Image src={m.url} alt="" fill sizes="56px" className="object-cover" />
               )}
             </button>
           ))}

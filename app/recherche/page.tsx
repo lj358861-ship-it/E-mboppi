@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Search, SlidersHorizontal, Store, Flame, Image as ImageIcon, Clapperboard, Users, Clock } from "lucide-react";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
 import { CATEGORIES, sousCategoriesPour } from "@/lib/categories";
@@ -71,6 +72,7 @@ export default function Recherche() {
   const [chargement, setChargement] = useState(false);
   const [chargementSuite, setChargementSuite] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [suggestionsFallback, setSuggestionsFallback] = useState(false);
 
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [historique, setHistorique] = useState<string[]>([]);
@@ -138,6 +140,7 @@ export default function Recherche() {
       const data = await res.json();
       setProduits((prev) => (ajouter ? [...prev, ...(data.produits || [])] : data.produits || []));
       setHasMore(Boolean(data.hasMore));
+      setSuggestionsFallback(Boolean(data.suggestionsFallback));
       setChargement(false);
       setChargementSuite(false);
     },
@@ -199,7 +202,7 @@ export default function Recherche() {
     <div>
       {/* Héro recherche — bandeau néon assorti au reste du site, plutôt
           qu'un simple titre sur fond blanc */}
-      <section className="relative overflow-hidden rounded-b-3xl md:rounded-3xl md:mx-8 md:mt-6 bg-indigo-950 px-5 md:px-8 pt-7 pb-6">
+      <section className="relative rounded-b-3xl md:rounded-3xl md:mx-8 md:mt-6 bg-indigo-950 px-5 md:px-8 pt-7 pb-6">
         <span className="neon-blob w-40 h-40 bg-neon-600 -top-14 -left-10" aria-hidden="true" />
         <span className="neon-blob w-48 h-48 bg-neonpink-500 -bottom-20 -right-8" aria-hidden="true" />
 
@@ -369,10 +372,9 @@ export default function Recherche() {
                 href={`/vendeur/${v.id}`}
                 className="flex flex-col items-center text-center gap-2 bg-white border border-stone-200 rounded-2xl p-4 hover:border-indigo-800 transition-colors"
               >
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-stone-100 flex items-center justify-center flex-shrink-0">
+                <div className="relative w-16 h-16 rounded-full overflow-hidden bg-stone-100 flex items-center justify-center flex-shrink-0">
                   {v.logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={v.logoUrl} alt={v.nomBoutique} className="w-full h-full object-cover" />
+                    <Image src={v.logoUrl} alt={v.nomBoutique} fill sizes="64px" className="object-cover" />
                   ) : (
                     <Store size={22} className="text-indigo-900/30" />
                   )}
@@ -395,6 +397,11 @@ export default function Recherche() {
               {onglet === "hot"
                 ? "Aucun article boosté pour le moment."
                 : "Aucun article ne correspond à votre recherche pour le moment."}
+            </p>
+          )}
+          {!chargement && produits.length > 0 && suggestionsFallback && terme.trim() && (
+            <p className="text-sm text-indigo-900/60 mb-3">
+              Aucun résultat exact pour « {terme.trim()} ». Voici des articles qui pourraient vous plaire :
             </p>
           )}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
