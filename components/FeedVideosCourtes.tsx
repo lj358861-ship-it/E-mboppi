@@ -13,7 +13,7 @@ type Produit = {
   description: string | null;
   videoUrl: string | null;
   statutStock: StatutStock;
-  enPromo: boolean;
+  boost: boolean;
   vendeur: { id: string; nomBoutique: string; utilisateur: { whatsapp: string } };
 };
 
@@ -89,7 +89,7 @@ export default function FeedVideosCourtes({ produits }: { produits: Produit[] })
                 vidéo courte
               </span>
             </div>
-            {p.enPromo && (
+            {p.boost && (
               <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
                 {LABEL_BADGE_PROMO}
               </span>

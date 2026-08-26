@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ImagePlus, Video, Flame } from "lucide-react";
+import { ImagePlus, Video } from "lucide-react";
 import { CATEGORIES, sousCategoriesPour } from "@/lib/categories";
 import { OPTIONS_STATUT_STOCK, StatutStock } from "@/lib/stock";
 import UploadPhotos, { PhotoUploadee } from "@/components/UploadPhotos";
@@ -19,7 +19,6 @@ export default function ProduitForm() {
     categorie: "",
     description: "",
     statutStock: "DISPONIBLE" as StatutStock,
-    enPromo: false,
   });
   const [photos, setPhotos] = useState<PhotoUploadee[]>([]);
   const [video, setVideo] = useState<VideoUploadee>(null);
@@ -68,7 +67,7 @@ export default function ProduitForm() {
       return;
     }
 
-    setForm({ titre: "", nature: "", prix: "", categorie: "", description: "", statutStock: "DISPONIBLE", enPromo: false });
+    setForm({ titre: "", nature: "", prix: "", categorie: "", description: "", statutStock: "DISPONIBLE" });
     setPhotos([]);
     setVideo(null);
     router.refresh();
@@ -178,16 +177,6 @@ export default function ProduitForm() {
         ))}
       </select>
 
-      <label className="flex items-center gap-2 text-sm text-indigo-900 cursor-pointer select-none">
-        <input
-          type="checkbox"
-          checked={form.enPromo}
-          onChange={(e) => setForm({ ...form, enPromo: e.target.checked })}
-          className="w-4 h-4 accent-neon-500"
-        />
-        <Flame size={15} className="text-mango-500" /> Mettre en avant dans « Hot Sales »
-      </label>
-
       <textarea
         placeholder="Description"
         value={form.description}
@@ -203,6 +192,11 @@ export default function ProduitForm() {
       )}
 
       {erreur && <p className="text-xs text-piment-500">{erreur}</p>}
+
+      <p className="text-xs text-indigo-900/40 -mt-1">
+        Envie d&apos;apparaître dans « Hot Sales » ? Publiez d&apos;abord votre article, vous
+        pourrez ensuite demander un boost payant depuis « Mes articles ».
+      </p>
 
       <button
         disabled={envoi}

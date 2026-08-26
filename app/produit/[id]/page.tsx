@@ -1,24 +1,41 @@
 import { prisma } from "@/lib/prisma";
 import { lireSession } from "@/lib/auth";
 import { lienContacterVendeur } from "@/lib/whatsapp";
+import { estVendeurVerifie } from "@/lib/abonnement";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { MessageCircle, Store, Tag, MapPin, Flame } from "lucide-react";
+import { Store, Tag, MapPin, Flame } from "lucide-react";
 import { classesBadgeStock, labelStatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
 import EcrireAuVendeur from "./EcrireAuVendeur";
 import GalerieProduit from "./GalerieProduit";
+import BoutonContacterWhatsapp from "@/components/BoutonContacterWhatsapp";
+import BoutonPartager from "@/components/BoutonPartager";
+import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
 
 export const dynamic = "force-dynamic";
 
 export default async function PageProduit({ params }: { params: { id: string } }) {
   const produit = await prisma.produit.findUnique({
     where: { id: params.id },
-    include: { vendeur: { include: { utilisateur: true } } },
+    include: {
+      vendeur: {
+        include: {
+          utilisateur: true,
+          abonnements: { orderBy: { createdAt: "desc" }, take: 1 },
+        },
+      },
+    },
   });
 
   if (!produit) notFound();
 
+  // Comptabilise une vue de la fiche — statistique affichée au vendeur.
+  // Ne bloque jamais l'affichage de la page si ça échoue.
+  prisma.produit.update({ where: { id: produit.id }, data: { vues: { increment: 1 } } }).catch(() => {});
+
   const session = lireSession();
+  const verifie = estVendeurVerifie(produit.vendeur, produit.vendeur.abonnements[0]);
+  const urlProduit = `${process.env.NEXT_PUBLIC_SITE_URL || "https://e-mboppi.com"}/produit/${produit.id}`;
 
   return (
     <div className="px-4 md:px-8 py-6 max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
@@ -38,8 +55,11 @@ export default async function PageProduit({ params }: { params: { id: string } }
             )}
           </span>
           <span>
-            <span className="block text-sm font-medium text-indigo-900 group-hover:underline">
-              {produit.vendeur.nomBoutique}
+            <span className="flex items-center gap-1.5 flex-wrap">
+              <span className="block text-sm font-medium text-indigo-900 group-hover:underline">
+                {produit.vendeur.nomBoutique}
+              </span>
+              {verifie && <BadgeVendeurVerifie />}
             </span>
             <span className="flex items-center gap-2 flex-wrap text-xs text-indigo-900/50 mt-0.5">
               {produit.vendeur.ville && (
@@ -67,7 +87,7 @@ export default async function PageProduit({ params }: { params: { id: string } }
           <p className="font-mono text-mango-600 text-xl font-semibold">
             {produit.prix.toLocaleString("fr-FR")} F
           </p>
-          {produit.enPromo && (
+          {produit.boost && (
             <span className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
               <Flame size={12} /> {LABEL_BADGE_PROMO}
             </span>
@@ -89,19 +109,17 @@ export default async function PageProduit({ params }: { params: { id: string } }
         )}
 
         <div className="flex flex-wrap gap-3 mb-8">
-          <a
+          <BoutonContacterWhatsapp
+            produitId={produit.id}
             href={lienContacterVendeur(produit.vendeur.utilisateur.whatsapp, produit.titre)}
-            target="_blank"
-            rel="noopener noreferrer"
             className="flex items-center gap-2 bg-feuille-500 hover:bg-feuille-600 transition-colors text-white px-5 py-3 rounded-full font-medium text-sm"
-          >
-            <MessageCircle size={16} /> WhatsApp du vendeur
-          </a>
+          />
           <EcrireAuVendeur
             vendeurUtilisateurId={produit.vendeur.utilisateur.id}
             moiId={session?.id ?? null}
             titreProduit={produit.titre}
           />
+          <BoutonPartager titre={produit.titre} url={urlProduit} />
         </div>
       </div>
     </div>

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { Search, SlidersHorizontal, Store, Flame, Image as ImageIcon, Clapperboard, Users } from "lucide-react";
+import { Search, SlidersHorizontal, Store, Flame, Image as ImageIcon, Clapperboard, Users, Clock } from "lucide-react";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
 import { CATEGORIES, sousCategoriesPour } from "@/lib/categories";
 import { StatutStock } from "@/lib/stock";
@@ -14,7 +14,7 @@ type Produit = {
   videoUrl: string | null;
   photos: string[];
   statutStock: StatutStock;
-  enPromo: boolean;
+  boost: boolean;
   estFavori?: boolean;
   vendeur: { id: string; nomBoutique: string; logoUrl: string | null; ville: string | null; utilisateur: { whatsapp: string } };
 };
@@ -27,6 +27,8 @@ type VendeurResultat = {
   _count: { produits: number };
 };
 
+type Suggestion = { texte: string; type: "produit" | "boutique" };
+
 type Onglet = "hot" | "photo" | "video" | "vendeurs";
 
 const ONGLETS: { valeur: Onglet; label: string; icone: typeof Flame }[] = [
@@ -35,6 +37,25 @@ const ONGLETS: { valeur: Onglet; label: string; icone: typeof Flame }[] = [
   { valeur: "video", label: "Vidéos", icone: Clapperboard },
   { valeur: "vendeurs", label: "Vendeurs", icone: Users },
 ];
+
+const CLE_HISTORIQUE = "emboppi:recherches-recentes";
+
+function lireHistorique(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const brut = window.localStorage.getItem(CLE_HISTORIQUE);
+    return brut ? JSON.parse(brut) : [];
+  } catch {
+    return [];
+  }
+}
+
+function enregistrerDansHistorique(terme: string) {
+  if (typeof window === "undefined" || !terme.trim()) return;
+  const historique = lireHistorique().filter((t) => t.toLowerCase() !== terme.toLowerCase());
+  historique.unshift(terme.trim());
+  window.localStorage.setItem(CLE_HISTORIQUE, JSON.stringify(historique.slice(0, 8)));
+}
 
 export default function Recherche() {
   const [terme, setTerme] = useState("");
@@ -48,10 +69,50 @@ export default function Recherche() {
   const [produits, setProduits] = useState<Produit[]>([]);
   const [vendeurs, setVendeurs] = useState<VendeurResultat[]>([]);
   const [chargement, setChargement] = useState(false);
+  const [chargementSuite, setChargementSuite] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [historique, setHistorique] = useState<string[]>([]);
+  const [champActif, setChampActif] = useState(false);
+
+  const sentinelleRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setHistorique(lireHistorique());
+  }, []);
+
+  // --- Autocomplétion : suggestions en temps réel pendant la frappe ---
+  useEffect(() => {
+    if (!champActif || terme.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    let annule = false;
+    const delai = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/recherche/suggestions?q=${encodeURIComponent(terme.trim())}`);
+        if (!res.ok || annule) return;
+        const data = await res.json();
+        if (!annule) setSuggestions(data.suggestions || []);
+      } catch {
+        // silencieux
+      }
+    }, 200);
+    return () => {
+      annule = true;
+      clearTimeout(delai);
+    };
+  }, [terme, champActif]);
 
   const rechercher = useCallback(
-    async (params: { q: string; categorie: string; nature: string; prixMin: string; prixMax: string; onglet: Onglet }) => {
-      setChargement(true);
+    async (
+      params: { q: string; categorie: string; nature: string; prixMin: string; prixMax: string; onglet: Onglet },
+      skip: number,
+      ajouter: boolean
+    ) => {
+      if (ajouter) setChargementSuite(true);
+      else setChargement(true);
 
       if (params.onglet === "vendeurs") {
         const query = new URLSearchParams();
@@ -60,6 +121,7 @@ export default function Recherche() {
         const data = await res.json();
         setVendeurs(data.vendeurs || []);
         setChargement(false);
+        setChargementSuite(false);
         return;
       }
 
@@ -70,23 +132,44 @@ export default function Recherche() {
       if (params.prixMin) query.set("prixMin", params.prixMin);
       if (params.prixMax) query.set("prixMax", params.prixMax);
       query.set("type", params.onglet);
+      if (skip) query.set("skip", String(skip));
 
       const res = await fetch(`/api/produits?${query.toString()}`);
       const data = await res.json();
-      setProduits(data.produits || []);
+      setProduits((prev) => (ajouter ? [...prev, ...(data.produits || [])] : data.produits || []));
+      setHasMore(Boolean(data.hasMore));
       setChargement(false);
+      setChargementSuite(false);
     },
     []
   );
 
   useEffect(() => {
-    const delai = setTimeout(
-      () => rechercher({ q: terme, categorie, nature: sousCategorie, prixMin, prixMax, onglet }),
-      350
-    );
+    const delai = setTimeout(() => {
+      rechercher({ q: terme, categorie, nature: sousCategorie, prixMin, prixMax, onglet }, 0, false);
+      if (terme.trim()) enregistrerDansHistorique(terme);
+    }, 350);
     return () => clearTimeout(delai);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [terme, categorie, sousCategorie, prixMin, prixMax, onglet]);
+
+  // --- Défilement infini : charge la page suivante quand la sentinelle apparaît ---
+  useEffect(() => {
+    if (onglet === "vendeurs") return;
+    const sentinelle = sentinelleRef.current;
+    if (!sentinelle) return;
+    const observateur = new IntersectionObserver(
+      (entrees) => {
+        if (entrees[0].isIntersecting && hasMore && !chargement && !chargementSuite) {
+          rechercher({ q: terme, categorie, nature: sousCategorie, prixMin, prixMax, onglet }, produits.length, true);
+        }
+      },
+      { rootMargin: "400px" }
+    );
+    observateur.observe(sentinelle);
+    return () => observateur.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMore, chargement, chargementSuite, produits.length, terme, categorie, sousCategorie, prixMin, prixMax, onglet]);
 
   // La liste "nature du produit" dépend de la catégorie choisie — on
   // réinitialise si la catégorie change et n'a plus d'options en commun.
@@ -95,8 +178,22 @@ export default function Recherche() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categorie]);
 
+  function choisirSuggestion(texte: string) {
+    setTerme(texte);
+    setChampActif(false);
+    setSuggestions([]);
+    enregistrerDansHistorique(texte);
+    setHistorique(lireHistorique());
+  }
+
+  function effacerHistorique() {
+    window.localStorage.removeItem(CLE_HISTORIQUE);
+    setHistorique([]);
+  }
+
   const filtresActifs = Boolean(categorie || sousCategorie || prixMin || prixMax);
   const filtresPertinents = onglet !== "vendeurs";
+  const menuDeroulantOuvert = champActif && (suggestions.length > 0 || (!terme.trim() && historique.length > 0));
 
   return (
     <div>
@@ -119,9 +216,62 @@ export default function Recherche() {
             <input
               value={terme}
               onChange={(e) => setTerme(e.target.value)}
+              onFocus={() => setChampActif(true)}
+              onBlur={() => setTimeout(() => setChampActif(false), 150)}
               placeholder="Ex : robe wax, parfum, nom d'une boutique..."
               className="w-full bg-white/95 rounded-full pl-11 pr-4 py-3.5 text-base outline-none border border-transparent shadow-lg shadow-black/25 focus:border-neon-400 focus:ring-2 focus:ring-neon-400/40"
             />
+
+            {menuDeroulantOuvert && (
+              <div className="absolute z-20 top-full mt-2 left-0 right-0 bg-white border border-stone-200 rounded-2xl shadow-lg overflow-hidden">
+                {suggestions.length > 0
+                  ? suggestions.map((s) => (
+                      <button
+                        key={`${s.type}-${s.texte}`}
+                        type="button"
+                        onClick={() => choisirSuggestion(s.texte)}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm text-indigo-950 hover:bg-stone-50"
+                      >
+                        {s.type === "boutique" ? (
+                          <Store size={14} className="text-indigo-900/40 flex-shrink-0" />
+                        ) : (
+                          <Search size={14} className="text-indigo-900/40 flex-shrink-0" />
+                        )}
+                        <span className="truncate">{s.texte}</span>
+                        {s.type === "boutique" && (
+                          <span className="ml-auto text-[10px] text-indigo-900/40 flex-shrink-0">Boutique</span>
+                        )}
+                      </button>
+                    ))
+                  : historique.length > 0 && (
+                      <>
+                        <div className="flex items-center justify-between px-4 pt-2.5 pb-1">
+                          <span className="text-[11px] font-semibold uppercase tracking-wide text-indigo-900/40">
+                            Recherches récentes
+                          </span>
+                          <button
+                            type="button"
+                            onClick={effacerHistorique}
+                            className="text-[11px] text-indigo-900/40 hover:text-piment-500"
+                          >
+                            Effacer
+                          </button>
+                        </div>
+                        {historique.map((h) => (
+                          <button
+                            key={h}
+                            type="button"
+                            onClick={() => choisirSuggestion(h)}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm text-indigo-950 hover:bg-stone-50"
+                          >
+                            <Clock size={14} className="text-indigo-900/40 flex-shrink-0" />
+                            <span className="truncate">{h}</span>
+                          </button>
+                        ))}
+                      </>
+                    )}
+              </div>
+            )}
           </div>
           {filtresPertinents && (
             <button
@@ -243,7 +393,7 @@ export default function Recherche() {
           {!chargement && produits.length === 0 && (
             <p className="text-sm text-indigo-900/50">
               {onglet === "hot"
-                ? "Aucun article en promo ou tendance pour le moment."
+                ? "Aucun article boosté pour le moment."
                 : "Aucun article ne correspond à votre recherche pour le moment."}
             </p>
           )}
@@ -261,12 +411,18 @@ export default function Recherche() {
                 villeVendeur={p.vendeur.ville}
                 whatsappVendeur={p.vendeur.utilisateur.whatsapp}
                 statutStock={p.statutStock}
-                enPromo={p.enPromo}
+                enPromo={p.boost}
                 estFavori={p.estFavori}
                 enFeu={onglet === "hot"}
               />
             ))}
           </div>
+
+          {/* Sentinelle invisible qui déclenche le chargement de la page suivante */}
+          <div ref={sentinelleRef} className="h-1" />
+          {chargementSuite && (
+            <p className="text-center text-xs text-indigo-900/40 py-4">Chargement d&apos;autres articles…</p>
+          )}
         </>
       )}
       </div>

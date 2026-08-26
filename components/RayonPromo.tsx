@@ -13,7 +13,7 @@ type ProduitPromo = {
   videoUrl: string | null;
   photos: string[];
   statutStock: StatutStock;
-  enPromo: boolean;
+  boost: boolean;
   estFavori?: boolean;
   vendeur: { id: string; nomBoutique: string; ville: string | null; utilisateur: { whatsapp: string } };
 };
@@ -83,7 +83,7 @@ export default function RayonPromo() {
               villeVendeur={p.vendeur.ville}
               whatsappVendeur={p.vendeur.utilisateur.whatsapp}
               statutStock={p.statutStock}
-              enPromo={p.enPromo}
+              enPromo={p.boost}
               estFavori={p.estFavori}
               enFeu
             />

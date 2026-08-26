@@ -31,3 +31,13 @@ export function lienNotifierPaiement(nomBoutique: string) {
   const message = `Bonjour Kmer Vision, je viens d'envoyer 2000F pour le renouvellement de l'abonnement de ma boutique "${nomBoutique}" sur E-Mboppi. Voici ma preuve de paiement.`;
   return `https://wa.me/${nettoyerNumero(ADMIN_WHATSAPP)}?text=${encodeURIComponent(message)}`;
 }
+
+/**
+ * Lien pour demander à l'admin de booster un article précis (mise en avant
+ * "Hot Sales" payante — le vendeur ne peut pas se l'attribuer lui-même,
+ * il doit passer par ce circuit de paiement/validation).
+ */
+export function lienDemanderBoost(nomBoutique: string, titreProduit: string) {
+  const message = `Bonjour Kmer Vision, je souhaite booster l'article "${titreProduit}" de ma boutique "${nomBoutique}" sur E-Mboppi pour qu'il apparaisse en Hot Sales. Pouvez-vous m'indiquer le montant et la marche à suivre pour le paiement ?`;
+  return `https://wa.me/${nettoyerNumero(ADMIN_WHATSAPP)}?text=${encodeURIComponent(message)}`;
+}

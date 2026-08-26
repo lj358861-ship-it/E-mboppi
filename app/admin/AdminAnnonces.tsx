@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Zap, ZapOff, Trash2, EyeOff, Eye } from "lucide-react";
-import { classesBadgeStock, labelStatutStock, StatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
+import { classesBadgeStock, labelStatutStock, StatutStock } from "@/lib/stock";
 
 type Produit = {
   id: string;
@@ -11,7 +11,6 @@ type Produit = {
   visible: boolean;
   boost: boolean;
   statutStock: StatutStock;
-  enPromo: boolean;
   vendeur: { nomBoutique: string };
 };
 
@@ -88,11 +87,6 @@ export default function AdminAnnonces({ onChangement }: { onChangement: () => vo
                 {p.statutStock !== "DISPONIBLE" && (
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${classesBadgeStock(p.statutStock)}`}>
                     {labelStatutStock(p.statutStock)}
-                  </span>
-                )}
-                {p.enPromo && (
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
-                    {LABEL_BADGE_PROMO}
                   </span>
                 )}
                 {!p.visible && (

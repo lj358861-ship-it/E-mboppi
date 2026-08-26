@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2, ImagePlus, Video, X, Flame } from "lucide-react";
+import { Pencil, Trash2, ImagePlus, Video, X, Zap, Eye, MousePointerClick } from "lucide-react";
 import { CATEGORIES, sousCategoriesPour } from "@/lib/categories";
-import { OPTIONS_STATUT_STOCK, classesBadgeStock, labelStatutStock, StatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
+import { OPTIONS_STATUT_STOCK, classesBadgeStock, labelStatutStock, StatutStock } from "@/lib/stock";
+import { lienDemanderBoost } from "@/lib/whatsapp";
 import UploadPhotos, { PhotoUploadee } from "@/components/UploadPhotos";
 import UploadVideo, { VideoUploadee } from "@/components/UploadVideo";
 
@@ -21,10 +22,12 @@ export type ArticleVendeur = {
   videoPublicId: string | null;
   visible: boolean;
   statutStock: StatutStock;
-  enPromo: boolean;
+  boost: boolean;
+  vues: number;
+  clicsContact: number;
 };
 
-export default function MesArticles({ produits }: { produits: ArticleVendeur[] }) {
+export default function MesArticles({ produits, nomBoutique }: { produits: ArticleVendeur[]; nomBoutique: string }) {
   const [idEnEdition, setIdEnEdition] = useState<string | null>(null);
   const [idEnSuppression, setIdEnSuppression] = useState<string | null>(null);
   const router = useRouter();
@@ -76,6 +79,14 @@ export default function MesArticles({ produits }: { produits: ArticleVendeur[] }
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-indigo-900 truncate">{p.titre}</p>
               <p className="text-xs text-indigo-900/50">{p.prix.toLocaleString("fr-FR")} F</p>
+              <p className="flex items-center gap-2.5 text-[11px] text-indigo-900/40 mt-0.5">
+                <span className="flex items-center gap-0.5">
+                  <Eye size={11} /> {p.vues}
+                </span>
+                <span className="flex items-center gap-0.5">
+                  <MousePointerClick size={11} /> {p.clicsContact}
+                </span>
+              </p>
             </div>
             <div className="flex flex-col items-end gap-1">
               <span
@@ -90,10 +101,19 @@ export default function MesArticles({ produits }: { produits: ArticleVendeur[] }
                   {labelStatutStock(p.statutStock)}
                 </span>
               )}
-              {p.enPromo && (
-                <span className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
-                  <Flame size={10} /> {LABEL_BADGE_PROMO}
+              {p.boost ? (
+                <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold bg-gradient-neon text-white">
+                  <Zap size={10} /> Hot Sales actif
                 </span>
+              ) : (
+                <a
+                  href={lienDemanderBoost(nomBoutique, p.titre)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-semibold border border-mango-500/50 text-mango-600 hover:bg-mango-500/10 transition-colors"
+                >
+                  <Zap size={10} /> Booster
+                </a>
               )}
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
@@ -142,7 +162,6 @@ function FormulaireEdition({
     categorie: produit.categorie || "",
     description: produit.description || "",
     statutStock: produit.statutStock,
-    enPromo: produit.enPromo,
   });
   const [photos, setPhotos] = useState<PhotoUploadee[]>(
     produit.photos.map((url, i) => ({ url, publicId: produit.photosPublicIds[i] || url }))
@@ -184,7 +203,6 @@ function FormulaireEdition({
           categorie: form.categorie || null,
           description: form.description || null,
           statutStock: form.statutStock,
-          enPromo: form.enPromo,
           photos: photos.map((p) => p.url),
           photosPublicIds: photos.map((p) => p.publicId),
           videoUrl: video?.url || null,
@@ -304,16 +322,6 @@ function FormulaireEdition({
           </option>
         ))}
       </select>
-
-      <label className="flex items-center gap-2 text-xs text-indigo-900 cursor-pointer select-none">
-        <input
-          type="checkbox"
-          checked={form.enPromo}
-          onChange={(e) => setForm({ ...form, enPromo: e.target.checked })}
-          className="w-4 h-4 accent-neon-500"
-        />
-        <Flame size={13} className="text-mango-500" /> Mettre en avant dans « Hot Sales »
-      </label>
 
       <textarea
         placeholder="Description"

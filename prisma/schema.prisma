@@ -109,6 +109,12 @@ model Produit {
   boostedAt    DateTime?
   createdAt    DateTime @default(now())
 
+  // Statistiques vendeur — vues de la fiche produit et clics sur "Contacter"
+  // (WhatsApp), affichées dans le tableau de bord pour motiver les vendeurs
+  // à soigner leurs fiches (photos/vidéos).
+  vues         Int      @default(0)
+  clicsContact Int      @default(0)
+
   favoris      Favori[]
 
   @@index([vendeurId])

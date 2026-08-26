@@ -25,9 +25,9 @@ async function idsFavoris(produitIds: string[]): Promise<Set<string>> {
 
 async function recupererProduitsHot() {
   return prisma.produit.findMany({
-    where: { visible: true, OR: [{ enPromo: true }, { boost: true }] },
+    where: { visible: true, boost: true },
     include: { vendeur: SELECTION_VENDEUR },
-    orderBy: [{ enPromo: "desc" }, { boost: "desc" }, { createdAt: "desc" }],
+    orderBy: [{ boostedAt: "desc" }, { createdAt: "desc" }],
     take: 20,
   });
 }
@@ -107,7 +107,7 @@ export default async function Accueil() {
                   villeVendeur={p.vendeur.ville}
                   whatsappVendeur={p.vendeur.utilisateur.whatsapp}
                   statutStock={p.statutStock}
-                  enPromo={p.enPromo}
+                  enPromo={p.boost}
                   estFavori={favoris.has(p.id)}
                   enFeu
                 />
@@ -139,7 +139,7 @@ export default async function Accueil() {
                   villeVendeur={p.vendeur.ville}
                   whatsappVendeur={p.vendeur.utilisateur.whatsapp}
                   statutStock={p.statutStock}
-                  enPromo={p.enPromo}
+                  enPromo={p.boost}
                   estFavori={favoris.has(p.id)}
                 />
               </div>

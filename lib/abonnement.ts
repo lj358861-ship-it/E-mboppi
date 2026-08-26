@@ -3,6 +3,23 @@ import { prisma } from "./prisma";
 export const DUREE_ABONNEMENT_JOURS = 30;
 export const MONTANT_ABONNEMENT = 2000;
 
+// Ancienneté minimum (en jours) avant qu'une boutique avec abonnement actif
+// obtienne le badge "Vendeur vérifié" — évite qu'un compte tout juste créé
+// et payé une fois se pare de ce badge de confiance.
+export const VERIFIE_ANCIENNETE_JOURS = 60;
+
+/**
+ * Un vendeur est "vérifié" si son abonnement est actif ET que sa boutique
+ * existe depuis au moins VERIFIE_ANCIENNETE_JOURS jours — un signal de
+ * confiance simple pour un marché où l'identité n'est pas vérifiée par pièce.
+ */
+export function estVendeurVerifie(vendeur: { createdAt: Date }, abonnement?: { statut: string } | null): boolean {
+  if (!abonnement || abonnement.statut !== "ACTIF") return false;
+  const ancienneteMs = Date.now() - new Date(vendeur.createdAt).getTime();
+  const ancienneteJours = ancienneteMs / (1000 * 60 * 60 * 24);
+  return ancienneteJours >= VERIFIE_ANCIENNETE_JOURS;
+}
+
 /** Nombre de jours restants avant expiration (0 si expiré ou aucun abonnement actif) */
 export function joursRestants(dateFin: Date): number {
   const diffMs = new Date(dateFin).getTime() - Date.now();

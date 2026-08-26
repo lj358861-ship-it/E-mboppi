@@ -46,6 +46,9 @@ export async function GET(req: NextRequest) {
   const type = req.nextUrl.searchParams.get("type") || undefined; // "photo" | "video" | "hot"
   const prixMin = req.nextUrl.searchParams.get("prixMin");
   const prixMax = req.nextUrl.searchParams.get("prixMax");
+  // Pagination : "skip" pour le défilement infini de la page recherche.
+  const skip = Math.max(0, Number(req.nextUrl.searchParams.get("skip")) || 0);
+  const TAILLE_PAGE = 24;
 
   const filtrePrix: { gte?: number; lte?: number } = {};
   if (prixMin) filtrePrix.gte = Number(prixMin);
@@ -62,15 +65,18 @@ export async function GET(req: NextRequest) {
     ...filtreType,
   };
 
-  // Onglet "Hot Sales" : articles mis en avant (promo ou boostés par l'admin)
+  // Onglet "Hot Sales" : uniquement les articles boostés (payant, décidé par
+  // l'admin) — un vendeur ne peut pas s'y placer lui-même.
   if (type === "hot" && !q) {
     const produits = await prisma.produit.findMany({
-      where: { ...filtreBase, OR: [{ enPromo: true }, { boost: true }] },
+      where: { ...filtreBase, boost: true },
       include: { vendeur: SELECTION_VENDEUR },
-      orderBy: [{ enPromo: "desc" }, { boost: "desc" }, { createdAt: "desc" }],
-      take: 60,
+      orderBy: [{ boostedAt: "desc" }, { createdAt: "desc" }],
+      skip,
+      take: TAILLE_PAGE + 1,
     });
-    return NextResponse.json({ produits: await avecFavoris(produits) });
+    const hasMore = produits.length > TAILLE_PAGE;
+    return NextResponse.json({ produits: await avecFavoris(produits.slice(0, TAILLE_PAGE)), hasMore });
   }
 
   if (!q) {
@@ -78,9 +84,11 @@ export async function GET(req: NextRequest) {
       where: filtreBase,
       include: { vendeur: SELECTION_VENDEUR },
       orderBy: [{ boost: "desc" }, { createdAt: "desc" }],
-      take: 60,
+      skip,
+      take: TAILLE_PAGE + 1,
     });
-    return NextResponse.json({ produits: await avecFavoris(produits) });
+    const hasMore = produits.length > TAILLE_PAGE;
+    return NextResponse.json({ produits: await avecFavoris(produits.slice(0, TAILLE_PAGE)), hasMore });
   }
 
   // --- Passe 1 : correspondance stricte (rapide, sur titre/nature/boutique) ---
@@ -94,15 +102,22 @@ export async function GET(req: NextRequest) {
       ],
     },
     include: { vendeur: SELECTION_VENDEUR },
-    orderBy: [{ enPromo: "desc" }, { boost: "desc" }, { createdAt: "desc" }],
-    take: 60,
+    orderBy: [{ boost: "desc" }, { createdAt: "desc" }],
+    skip,
+    take: TAILLE_PAGE + 1,
   });
 
   if (correspondanceStricte.length > 0) {
-    return NextResponse.json({ produits: await avecFavoris(correspondanceStricte) });
+    const hasMore = correspondanceStricte.length > TAILLE_PAGE;
+    return NextResponse.json({
+      produits: await avecFavoris(correspondanceStricte.slice(0, TAILLE_PAGE)),
+      hasMore,
+    });
   }
 
   // --- Passe 2 : fautes de frappe — on élargit et on classe par similarité ---
+  // (Le classement par pertinence se fait sur un lot large, donc la pagination
+  // se fait ensuite en mémoire sur le résultat déjà trié.)
   const candidats = await prisma.produit.findMany({
     where: filtreBase,
     include: { vendeur: SELECTION_VENDEUR },
@@ -112,9 +127,11 @@ export async function GET(req: NextRequest) {
 
   const classes = classerParPertinence(q, candidats, (p) =>
     [p.titre, p.nature || "", p.categorie || "", p.vendeur.nomBoutique].join(" ")
-  ).slice(0, 60);
+  );
+  const page = classes.slice(skip, skip + TAILLE_PAGE);
+  const hasMore = classes.length > skip + TAILLE_PAGE;
 
-  return NextResponse.json({ produits: await avecFavoris(classes) });
+  return NextResponse.json({ produits: await avecFavoris(page), hasMore });
 }
 
 // POST /api/produits — un vendeur ajoute un produit (visible = statut de son abonnement)
@@ -166,7 +183,10 @@ export async function POST(req: NextRequest) {
       videoPublicId: body.videoPublicId || null,
       statutStock,
       nature: body.nature || null,
-      enPromo: Boolean(body.enPromo),
+      // "Hot Sales" ne peut jamais être choisi par le vendeur à la création :
+      // seul un boost payant, validé par l'admin (`boost`), place un article
+      // en avant. `enPromo` reste à false ici.
+      enPromo: false,
       visible: abonnementActif,
     },
   });

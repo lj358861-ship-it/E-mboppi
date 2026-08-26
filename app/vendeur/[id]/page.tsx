@@ -3,8 +3,11 @@ import { lireIdAppareil } from "@/lib/appareil";
 import { notFound } from "next/navigation";
 import { MapPin, MessageCircle, Store } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
+import { estVendeurVerifie } from "@/lib/abonnement";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
 import BoutonSuivreBoutique from "@/components/BoutonSuivreBoutique";
+import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
+import BoutonPartager from "@/components/BoutonPartager";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +16,7 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
     where: { id: params.id },
     include: {
       utilisateur: { select: { whatsapp: true } },
+      abonnements: { orderBy: { createdAt: "desc" }, take: 1 },
       produits: {
         where: { visible: true },
         orderBy: [{ boost: "desc" }, { createdAt: "desc" }],
@@ -42,6 +46,9 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
     prisma.suivi.count({ where: { vendeurId: vendeur.id } }),
   ]);
 
+  const verifie = estVendeurVerifie(vendeur, vendeur.abonnements[0]);
+  const urlBoutique = `${process.env.NEXT_PUBLIC_SITE_URL || "https://e-mboppi.com"}/vendeur/${vendeur.id}`;
+
   return (
     <div className="px-4 md:px-8 py-8 max-w-5xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center gap-5 mb-8">
@@ -55,7 +62,10 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
         </div>
 
         <div className="flex-1">
-          <h1 className="font-display text-2xl font-semibold text-indigo-900">{vendeur.nomBoutique}</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="font-display text-2xl font-semibold text-indigo-900">{vendeur.nomBoutique}</h1>
+            {verifie && <BadgeVendeurVerifie taille={13} />}
+          </div>
           {vendeur.ville && (
             <p className="flex items-center gap-1 text-sm text-indigo-900/60 mt-1">
               <MapPin size={14} /> {vendeur.ville}
@@ -81,11 +91,14 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
           >
             <MessageCircle size={16} /> Contacter sur WhatsApp
           </a>
-          <BoutonSuivreBoutique
-            vendeurId={vendeur.id}
-            suiviInitial={Boolean(suiviExistant)}
-            nbSuivisInitial={nbSuivis}
-          />
+          <div className="flex items-center gap-2">
+            <BoutonSuivreBoutique
+              vendeurId={vendeur.id}
+              suiviInitial={Boolean(suiviExistant)}
+              nbSuivisInitial={nbSuivis}
+            />
+            <BoutonPartager titre={vendeur.nomBoutique} url={urlBoutique} />
+          </div>
         </div>
       </div>
 
@@ -106,7 +119,7 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
               villeVendeur={vendeur.ville}
               whatsappVendeur={vendeur.utilisateur.whatsapp}
               statutStock={p.statutStock}
-              enPromo={p.enPromo}
+              enPromo={p.boost}
               estFavori={favoris.has(p.id)}
             />
           ))}
