@@ -3,7 +3,7 @@
 Plateforme du marché Mboppi (Douala), créée par **Kmer Vision**. Vitrines vidéo
 courtes ("reels") et photos (1 à 5 par article) par vendeur, profils de
 boutique cliquables, recherche avec filtres catégorie/prix, contact WhatsApp
-direct, messagerie interne, favoris, et abonnement vendeur à 2000F/mois avec
+direct, favoris, et abonnement vendeur à 2000F/mois avec
 activation/désactivation automatique.
 
 ---
@@ -30,9 +30,8 @@ activation/désactivation automatique.
   tout abonnement dépassé et masque automatiquement les produits du vendeur.
   Le vendeur voit alors un message l'invitant à renouveler.
 - **Contact vendeur** : une icône/bouton WhatsApp sur chaque article ouvre
-  `wa.me` avec un message pré-rempli mentionnant le produit exact, et une
-  messagerie interne au site est aussi disponible (pour discuter sans quitter
-  E-Mboppi).
+  `wa.me` avec un message pré-rempli mentionnant le produit exact — c'est le
+  seul canal de contact, il n'y a pas de messagerie interne au site.
 - **Favoris** : chaque client peut enregistrer des articles.
 
 ---
@@ -169,7 +168,7 @@ app/
   vendeur/dashboard/page.tsx  → Espace vendeur (abonnement, produits)
   vendeur/connexion/page.tsx  → Connexion vendeur/admin
   admin/page.tsx              → Espace admin (validation paiements)
-  api/                        → Routes API (produits, vendeurs, messages...)
+  api/                        → Routes API (produits, vendeurs...)
 lib/
   prisma.ts                   → Client base de données
   auth.ts                     → Sessions (cookie JWT)

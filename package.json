@@ -13,6 +13,7 @@
     "postinstall": "prisma generate",
     "seed:admin": "tsx scripts/creer-admin.ts",
     "cron:abonnements": "tsx scripts/verifier-abonnements.ts",
+    "cron:rappels": "tsx scripts/rappel-abonnements.ts",
     "cap:add:android": "npx cap add android",
     "cap:add:ios": "npx cap add ios",
     "cap:sync": "npx cap sync",
@@ -35,7 +36,8 @@
     "next": "^14.2.35",
     "prisma": "^6.16.1",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
@@ -43,6 +45,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/web-push": "^3.6.4",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
     "postcss": "^8",
