@@ -7,6 +7,10 @@
   /* Hauteurs réelles des barres de navigation mobile (hors zone de sécurité) */
   --mobile-header-h: 56px;
   --mobile-navbar-h: 64px;
+  /* Hauteur réelle de la barre d'action fixe de la fiche produit (prix +
+     bouton WhatsApp), pour que le contenu au-dessus réserve assez de place
+     et ne se fasse jamais recouvrir par cette barre. */
+  --product-cta-h: 68px;
 }
 
 html {
@@ -132,6 +136,20 @@ body {
    navigation mobile et de la zone de sécurité de l'écran */
 .barre-cta-mobile {
   bottom: calc(var(--mobile-navbar-h) + env(safe-area-inset-bottom));
+}
+
+/* Réserve assez d'espace en bas de la fiche produit (mobile) pour que la
+   barre d'action fixe et la barre de navigation ne recouvrent jamais le
+   contenu (ex: description du vendeur coupée). */
+.contenu-fiche-produit {
+  padding-bottom: calc(
+    var(--mobile-navbar-h) + var(--product-cta-h) + env(safe-area-inset-bottom) + 16px
+  );
+}
+@media (min-width: 768px) {
+  .contenu-fiche-produit {
+    padding-bottom: 1.5rem;
+  }
 }
 
 @layer utilities {

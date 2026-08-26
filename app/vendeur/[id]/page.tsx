@@ -55,15 +55,14 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
     <div className="max-w-5xl mx-auto px-4 md:px-8 py-6">
       {/* Carte boutique — bannière dégradée aux couleurs du site + infos */}
       <div className="relative rounded-3xl overflow-hidden bg-white border border-stone-200 shadow-sm mb-8">
-        <div className="h-24 sm:h-32 bg-gradient-to-br from-feuille-600 via-feuille-500 to-mango-500 relative overflow-hidden">
+        <div className="h-16 sm:h-20 bg-gradient-to-r from-feuille-600 to-feuille-500 relative overflow-hidden">
           <div className="absolute inset-0 bg-black/5" />
-          <div className="absolute -right-8 -top-10 w-40 h-40 rounded-full bg-white/10" />
-          <div className="absolute right-16 bottom-0 w-24 h-24 rounded-full bg-white/10" />
+          <div className="absolute -right-6 -top-10 w-32 h-32 rounded-full bg-white/10" />
         </div>
 
         <div className="px-5 sm:px-8 pb-6">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12 sm:-mt-14">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-md">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-2 pt-3">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-md">
               {vendeur.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={vendeur.logoUrl} alt={vendeur.nomBoutique} className="w-full h-full object-cover" />

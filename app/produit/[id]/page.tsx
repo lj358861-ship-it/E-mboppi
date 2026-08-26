@@ -39,7 +39,7 @@ export default async function PageProduit({ params }: { params: { id: string } }
   const urlProduit = `${process.env.NEXT_PUBLIC_SITE_URL || "https://e-mboppi-production.up.railway.app"}/produit/${produit.id}`;
 
   return (
-    <div className="px-4 md:px-8 py-6 pb-28 md:pb-6 max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+    <div className="contenu-fiche-produit px-4 md:px-8 pt-6 max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
       <BoutonFermer />
 
       <GalerieProduit videoUrl={produit.videoUrl} photos={produit.photos} titre={produit.titre} />

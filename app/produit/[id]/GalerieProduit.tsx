@@ -52,14 +52,14 @@ export default function GalerieProduit({
   }
 
   if (medias.length === 0) {
-    return <div className="rounded-2xl bg-indigo-950 aspect-[9/16] max-h-[560px] mx-auto w-full" />;
+    return <div className="rounded-2xl bg-stone-100 aspect-[4/5] max-h-[560px] mx-auto w-full" />;
   }
 
   return (
     <div>
       <div
         ref={conteneurRef}
-        className="relative rounded-2xl overflow-hidden bg-indigo-950 aspect-[9/16] max-h-[560px] mx-auto w-full group"
+        className="relative rounded-2xl overflow-hidden bg-stone-100 aspect-[4/5] max-h-[560px] mx-auto w-full group"
         onTouchStart={debutGlissement}
         onTouchMove={pendantGlissement}
         onTouchEnd={finGlissement}
@@ -80,11 +80,11 @@ export default function GalerieProduit({
                   autoPlay={i === indexActif}
                   muted
                   loop
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain bg-black"
                 />
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.url} alt={titre} className="w-full h-full object-cover" draggable={false} />
+                <img src={m.url} alt={titre} className="w-full h-full object-contain" draggable={false} />
               )}
             </div>
           ))}
