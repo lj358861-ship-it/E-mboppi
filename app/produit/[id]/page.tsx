@@ -35,7 +35,7 @@ export default async function PageProduit({ params }: { params: { id: string } }
 
   const session = lireSession();
   const verifie = estVendeurVerifie(produit.vendeur, produit.vendeur.abonnements[0]);
-  const urlProduit = `${process.env.NEXT_PUBLIC_SITE_URL || "https://e-mboppi.com"}/produit/${produit.id}`;
+  const urlProduit = `${process.env.NEXT_PUBLIC_SITE_URL || "https://e-mboppi-production.up.railway.app"}/produit/${produit.id}`;
 
   return (
     <div className="px-4 md:px-8 py-6 max-w-4xl mx-auto grid md:grid-cols-2 gap-8">

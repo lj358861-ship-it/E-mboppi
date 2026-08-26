@@ -44,6 +44,46 @@ body {
   background: rgba(0,0,0,0.15);
 }
 
+/* --- Animation d'assemblage du logo (écran d'intro sur la page d'accueil) --- */
+.intro-logo-grille {
+  position: relative;
+  width: min(46vw, 220px);
+  height: min(46vw, 220px);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+}
+
+.intro-logo-morceau {
+  background-image: url("/logo-e-mboppi.png");
+  background-size: 300% 300%;
+  opacity: 0;
+  animation: intro-piece-assemble 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: 0ms;
+}
+
+@keyframes intro-piece-assemble {
+  0% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(var(--echelle, 0.6));
+  }
+  65% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-logo-morceau {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

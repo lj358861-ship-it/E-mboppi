@@ -4,6 +4,7 @@ import CarteProduitVideo from "@/components/CarteProduitVideo";
 import PromoCarousel from "@/components/PromoCarousel";
 import RayonPromo from "@/components/RayonPromo";
 import ProduitsSuivis from "@/components/ProduitsSuivis";
+import IntroLogo from "@/components/IntroLogo";
 import Link from "next/link";
 import { Store, Flame } from "lucide-react";
 
@@ -67,6 +68,10 @@ export default async function Accueil() {
 
   return (
     <div>
+      {/* Écran d'intro : le logo s'assemble à l'ouverture ou à l'actualisation
+          de la page d'accueil, puis disparaît après 3 secondes */}
+      <IntroLogo />
+
       {/* Carrousel promotionnel néon animé */}
       <section className="px-4 md:px-8 pt-6 pb-4">
         <PromoCarousel />

@@ -47,7 +47,7 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
   ]);
 
   const verifie = estVendeurVerifie(vendeur, vendeur.abonnements[0]);
-  const urlBoutique = `${process.env.NEXT_PUBLIC_SITE_URL || "https://e-mboppi.com"}/vendeur/${vendeur.id}`;
+  const urlBoutique = `${process.env.NEXT_PUBLIC_SITE_URL || "https://e-mboppi-production.up.railway.app"}/vendeur/${vendeur.id}`;
 
   return (
     <div className="px-4 md:px-8 py-8 max-w-5xl mx-auto">
