@@ -1,6 +1,13 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 
+// Force la génération de sitemap.xml à la demande (runtime) plutôt qu'au
+// moment du build : sur Railway, la base de données (réseau privé
+// postgres.railway.internal) n'est joignable qu'au runtime, pas pendant le
+// build. Sans cette ligne, `next build` essaie d'interroger Prisma pour
+// pré-générer le sitemap et échoue avec "Can't reach database server".
+export const dynamic = "force-dynamic";
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://e-mboppi-production.up.railway.app";
 
 // Pages statiques toujours indexables.
