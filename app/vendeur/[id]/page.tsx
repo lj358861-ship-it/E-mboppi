@@ -55,8 +55,8 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
     <div className="max-w-5xl mx-auto px-4 md:px-8 py-6">
       {/* Carte boutique — bannière dégradée aux couleurs du site + infos */}
       <div className="relative rounded-3xl overflow-hidden bg-white border border-stone-200 shadow-sm mb-8">
-        <div className="h-24 sm:h-32 bg-gradient-neon relative overflow-hidden">
-          <div className="absolute inset-0 bg-black/10" />
+        <div className="h-24 sm:h-32 bg-gradient-to-br from-feuille-600 via-feuille-500 to-mango-500 relative overflow-hidden">
+          <div className="absolute inset-0 bg-black/5" />
           <div className="absolute -right-8 -top-10 w-40 h-40 rounded-full bg-white/10" />
           <div className="absolute right-16 bottom-0 w-24 h-24 rounded-full bg-white/10" />
         </div>
