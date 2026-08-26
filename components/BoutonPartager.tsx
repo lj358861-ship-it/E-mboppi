@@ -20,7 +20,15 @@ function IconeFacebook({ size = 15, className = "" }: { size?: number; className
   );
 }
 
-export default function BoutonPartager({ titre, url }: { titre: string; url: string }) {
+export default function BoutonPartager({
+  titre,
+  url,
+  compact = false,
+}: {
+  titre: string;
+  url: string;
+  compact?: boolean;
+}) {
   const [menuOuvert, setMenuOuvert] = useState(false);
   const [copie, setCopie] = useState(false);
 
@@ -53,15 +61,24 @@ export default function BoutonPartager({ titre, url }: { titre: string; url: str
       <button
         type="button"
         onClick={partager}
-        className="flex items-center gap-2 bg-stone-100 hover:bg-stone-200 transition-colors text-indigo-900 px-5 py-3 rounded-full font-medium text-sm"
+        aria-label="Partager"
+        className={
+          compact
+            ? "flex items-center justify-center w-11 h-11 flex-shrink-0 bg-stone-100 hover:bg-stone-200 transition-colors text-indigo-900 rounded-full"
+            : "flex items-center gap-2 bg-stone-100 hover:bg-stone-200 transition-colors text-indigo-900 px-5 py-3 rounded-full font-medium text-sm"
+        }
       >
-        <Share2 size={16} /> Partager
+        <Share2 size={16} /> {!compact && "Partager"}
       </button>
 
       {menuOuvert && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setMenuOuvert(false)} />
-          <div className="absolute z-20 top-full mt-2 left-0 bg-white border border-stone-200 rounded-2xl shadow-lg p-2 flex flex-col gap-1 min-w-[200px]">
+          <div
+            className={`absolute z-20 ${
+              compact ? "bottom-full mb-2 right-0" : "top-full mt-2 left-0"
+            } bg-white border border-stone-200 rounded-2xl shadow-lg p-2 flex flex-col gap-1 min-w-[200px]`}
+          >
             <a
               href={`https://wa.me/?text=${encodeURIComponent(texteMessage)}`}
               target="_blank"

@@ -8,6 +8,7 @@ import { Store, Tag, MapPin, Flame } from "lucide-react";
 import { classesBadgeStock, labelStatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
 import EcrireAuVendeur from "./EcrireAuVendeur";
 import GalerieProduit from "./GalerieProduit";
+import BoutonFermer from "./BoutonFermer";
 import BoutonContacterWhatsapp from "@/components/BoutonContacterWhatsapp";
 import BoutonPartager from "@/components/BoutonPartager";
 import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
@@ -38,10 +39,12 @@ export default async function PageProduit({ params }: { params: { id: string } }
   const urlProduit = `${process.env.NEXT_PUBLIC_SITE_URL || "https://e-mboppi-production.up.railway.app"}/produit/${produit.id}`;
 
   return (
-    <div className="px-4 md:px-8 py-6 max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+    <div className="px-4 md:px-8 py-6 pb-28 md:pb-6 max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+      <BoutonFermer />
+
       <GalerieProduit videoUrl={produit.videoUrl} photos={produit.photos} titre={produit.titre} />
 
-      <div>
+      <div className="md:bg-white md:border md:border-stone-200 md:rounded-3xl md:p-6">
         <Link
           href={`/vendeur/${produit.vendeur.id}`}
           className="flex items-start gap-3 mb-4 w-fit group bg-stone-50 border border-stone-200 rounded-2xl p-3"
@@ -108,7 +111,7 @@ export default async function PageProduit({ params }: { params: { id: string } }
           <p className="text-indigo-900/80 leading-relaxed mb-6">{produit.description}</p>
         )}
 
-        <div className="flex flex-wrap gap-3 mb-8">
+        <div className="hidden md:flex flex-wrap gap-3 mb-8">
           <BoutonContacterWhatsapp
             produitId={produit.id}
             href={lienContacterVendeur(produit.vendeur.utilisateur.whatsapp, produit.titre)}
@@ -121,6 +124,26 @@ export default async function PageProduit({ params }: { params: { id: string } }
           />
           <BoutonPartager titre={produit.titre} url={urlProduit} />
         </div>
+      </div>
+
+      {/* Barre d'action fixe sur mobile — reste visible pendant le défilement,
+          au-dessus de la barre de navigation du bas */}
+      <div className="barre-cta-mobile md:hidden fixed left-0 right-0 z-20 flex items-center gap-3 px-4 py-3 bg-white border-t border-stone-200">
+        <p className="font-mono text-mango-600 font-semibold whitespace-nowrap">
+          {produit.prix.toLocaleString("fr-FR")} F
+        </p>
+        <BoutonContacterWhatsapp
+          produitId={produit.id}
+          href={lienContacterVendeur(produit.vendeur.utilisateur.whatsapp, produit.titre)}
+          className="flex-1 flex items-center justify-center gap-2 bg-feuille-500 active:bg-feuille-600 transition-colors text-white px-4 py-2.5 rounded-full font-medium text-sm"
+        />
+        <EcrireAuVendeur
+          vendeurUtilisateurId={produit.vendeur.utilisateur.id}
+          moiId={session?.id ?? null}
+          titreProduit={produit.titre}
+          compact
+        />
+        <BoutonPartager titre={produit.titre} url={urlProduit} compact />
       </div>
     </div>
   );

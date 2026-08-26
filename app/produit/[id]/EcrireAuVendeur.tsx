@@ -8,10 +8,12 @@ export default function EcrireAuVendeur({
   vendeurUtilisateurId,
   moiId,
   titreProduit,
+  compact = false,
 }: {
   vendeurUtilisateurId: string;
   moiId: string | null;
   titreProduit: string;
+  compact?: boolean;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const [premierMessageEnvoye, setPremierMessageEnvoye] = useState(false);
@@ -37,6 +39,17 @@ export default function EcrireAuVendeur({
   }
 
   if (!ouvert) {
+    if (compact) {
+      return (
+        <button
+          onClick={ouvrirConversation}
+          aria-label="Écrire au vendeur"
+          className="flex items-center justify-center w-11 h-11 flex-shrink-0 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors text-indigo-900"
+        >
+          <MessageCircle size={18} />
+        </button>
+      );
+    }
     return (
       <button
         onClick={ouvrirConversation}

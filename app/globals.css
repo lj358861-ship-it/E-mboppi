@@ -44,44 +44,94 @@ body {
   background: rgba(0,0,0,0.15);
 }
 
-/* --- Animation d'assemblage du logo (écran d'intro sur la page d'accueil) --- */
-.intro-logo-grille {
-  position: relative;
-  width: min(46vw, 220px);
-  height: min(46vw, 220px);
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
+/* --- Animation "dessin" du logo (écran d'intro sur la page d'accueil) --- */
+/* Chaque forme (anse, bandeau, panier, corps du sac, feuille) se trace comme
+   au crayon (stroke-dashoffset), puis se colore une fois le tracé terminé. */
+.intro-trait {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation-name: intro-dessine;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
 }
 
-.intro-logo-morceau {
-  background-image: url("/logo-e-mboppi.png");
-  background-size: 300% 300%;
+.intro-remplissage {
+  fill-opacity: 0;
+  animation-name: intro-dessine-remplis;
+}
+
+.intro-point {
   opacity: 0;
-  animation: intro-piece-assemble 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  animation-delay: 0ms;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: intro-apparait-point 300ms ease-out forwards;
 }
 
-@keyframes intro-piece-assemble {
+.intro-texte {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: intro-texte-apparait 500ms ease-out forwards;
+}
+
+@keyframes intro-dessine {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes intro-dessine-remplis {
+  0% {
+    stroke-dashoffset: 600;
+    fill-opacity: 0;
+  }
+  75% {
+    fill-opacity: 0;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    fill-opacity: 1;
+  }
+}
+
+@keyframes intro-apparait-point {
   0% {
     opacity: 0;
-    transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(var(--echelle, 0.6));
+    transform: scale(0);
   }
-  65% {
+  70% {
     opacity: 1;
+    transform: scale(1.15);
   }
   100% {
     opacity: 1;
-    transform: translate(0, 0) rotate(0deg) scale(1);
+    transform: scale(1);
+  }
+}
+
+@keyframes intro-texte-apparait {
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .intro-logo-morceau {
-    animation: none;
-    opacity: 1;
-    transform: none;
+  .intro-trait,
+  .intro-remplissage,
+  .intro-point,
+  .intro-texte {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+    fill-opacity: 1 !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
+}
+
+/* Barre d'action fixe (fiche produit) — reste au-dessus de la barre de
+   navigation mobile et de la zone de sécurité de l'écran */
+.barre-cta-mobile {
+  bottom: calc(var(--mobile-navbar-h) + env(safe-area-inset-bottom));
 }
 
 @layer utilities {

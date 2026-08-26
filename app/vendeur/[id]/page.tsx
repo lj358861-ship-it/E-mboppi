@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { lireIdAppareil } from "@/lib/appareil";
 import { notFound } from "next/navigation";
-import { MapPin, MessageCircle, Store } from "lucide-react";
+import { MapPin, MessageCircle, Store, Tag, Heart, CalendarDays } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
 import { estVendeurVerifie } from "@/lib/abonnement";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
@@ -48,62 +48,95 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
 
   const verifie = estVendeurVerifie(vendeur, vendeur.abonnements[0]);
   const urlBoutique = `${process.env.NEXT_PUBLIC_SITE_URL || "https://e-mboppi-production.up.railway.app"}/vendeur/${vendeur.id}`;
+  const nbProduits = vendeur.produits.length;
+  const membreDepuis = vendeur.createdAt.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
 
   return (
-    <div className="px-4 md:px-8 py-8 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-5 mb-8">
-        <div className="w-24 h-24 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-sm">
-          {vendeur.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={vendeur.logoUrl} alt={vendeur.nomBoutique} className="w-full h-full object-cover" />
-          ) : (
-            <Store size={32} className="text-indigo-900/30" />
-          )}
+    <div className="max-w-5xl mx-auto px-4 md:px-8 py-6">
+      {/* Carte boutique — bannière dégradée aux couleurs du site + infos */}
+      <div className="relative rounded-3xl overflow-hidden bg-white border border-stone-200 shadow-sm mb-8">
+        <div className="h-24 sm:h-32 bg-gradient-neon relative overflow-hidden">
+          <div className="absolute inset-0 bg-black/10" />
+          <div className="absolute -right-8 -top-10 w-40 h-40 rounded-full bg-white/10" />
+          <div className="absolute right-16 bottom-0 w-24 h-24 rounded-full bg-white/10" />
         </div>
 
-        <div className="flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="font-display text-2xl font-semibold text-indigo-900">{vendeur.nomBoutique}</h1>
-            {verifie && <BadgeVendeurVerifie taille={13} />}
+        <div className="px-5 sm:px-8 pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12 sm:-mt-14">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-md">
+              {vendeur.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={vendeur.logoUrl} alt={vendeur.nomBoutique} className="w-full h-full object-cover" />
+              ) : (
+                <Store size={32} className="text-indigo-900/30" />
+              )}
+            </div>
+
+            <div className="flex-1 sm:pb-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="font-display text-2xl font-semibold text-indigo-900">{vendeur.nomBoutique}</h1>
+                {verifie && <BadgeVendeurVerifie taille={13} />}
+              </div>
+              {vendeur.ville && (
+                <p className="flex items-center gap-1 text-sm text-indigo-900/60 mt-1">
+                  <MapPin size={14} /> {vendeur.ville}
+                </p>
+              )}
+            </div>
           </div>
-          {vendeur.ville && (
-            <p className="flex items-center gap-1 text-sm text-indigo-900/60 mt-1">
-              <MapPin size={14} /> {vendeur.ville}
-            </p>
-          )}
-          {vendeur.description && (
-            <p className="text-sm text-indigo-900/70 mt-2 max-w-xl">{vendeur.description}</p>
-          )}
-          <p className="text-xs text-indigo-900/40 mt-2">
-            {vendeur.produits.length} article{vendeur.produits.length > 1 ? "s" : ""} en boutique
-            {" · "}
-            Membre depuis{" "}
-            {vendeur.createdAt.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
-          </p>
-        </div>
 
-        <div className="flex flex-col sm:items-end gap-2">
-          <a
-            href={lienContacterVendeur(vendeur.utilisateur.whatsapp, `la boutique ${vendeur.nomBoutique}`)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 bg-feuille-500 hover:bg-feuille-600 transition-colors text-white px-5 py-3 rounded-full font-medium text-sm w-fit"
-          >
-            <MessageCircle size={16} /> Contacter sur WhatsApp
-          </a>
-          <div className="flex items-center gap-2">
-            <BoutonSuivreBoutique
-              vendeurId={vendeur.id}
-              suiviInitial={Boolean(suiviExistant)}
-              nbSuivisInitial={nbSuivis}
-            />
-            <BoutonPartager titre={vendeur.nomBoutique} url={urlBoutique} />
+          {vendeur.description && (
+            <p className="text-sm text-indigo-900/70 mt-4 max-w-xl">{vendeur.description}</p>
+          )}
+
+          {/* Statistiques en pastilles colorées — remplace la ligne de texte gris */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-neon-700 bg-neon-300/30 px-3 py-1.5 rounded-full">
+              <Tag size={13} /> {nbProduits} article{nbProduits > 1 ? "s" : ""}
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-piment-600 bg-piment-500/10 px-3 py-1.5 rounded-full">
+              <Heart size={13} /> {nbSuivis} abonné{nbSuivis > 1 ? "s" : ""}
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-900/60 bg-stone-100 px-3 py-1.5 rounded-full">
+              <CalendarDays size={13} /> Depuis {membreDepuis}
+            </span>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-2 mt-5">
+            <a
+              href={lienContacterVendeur(vendeur.utilisateur.whatsapp, `la boutique ${vendeur.nomBoutique}`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 bg-feuille-500 hover:bg-feuille-600 transition-colors text-white px-5 py-3 rounded-full font-medium text-sm"
+            >
+              <MessageCircle size={16} /> Contacter sur WhatsApp
+            </a>
+            <div className="flex items-center gap-2">
+              <BoutonSuivreBoutique
+                vendeurId={vendeur.id}
+                suiviInitial={Boolean(suiviExistant)}
+                nbSuivisInitial={nbSuivis}
+              />
+              <BoutonPartager titre={vendeur.nomBoutique} url={urlBoutique} />
+            </div>
           </div>
         </div>
       </div>
 
-      {vendeur.produits.length === 0 ? (
-        <p className="text-sm text-indigo-900/50">Cette boutique n&apos;a pas encore d&apos;article visible.</p>
+      {/* Section produits */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display text-lg font-semibold text-indigo-900 flex items-center gap-2">
+          <Store size={18} className="text-neon-600" /> Articles en boutique
+        </h2>
+        {nbProduits > 0 && <span className="text-xs text-indigo-900/40">{nbProduits} article{nbProduits > 1 ? "s" : ""}</span>}
+      </div>
+
+      {nbProduits === 0 ? (
+        <div className="flex flex-col items-center justify-center text-center gap-2 border border-dashed border-stone-300 rounded-2xl py-14 px-6 text-indigo-900/40">
+          <Store size={28} className="text-indigo-900/25" />
+          <p className="text-sm">Cette boutique n&apos;a pas encore d&apos;article visible.</p>
+        </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {vendeur.produits.map((p: (typeof vendeur.produits)[number]) => (
