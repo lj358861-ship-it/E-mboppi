@@ -123,6 +123,9 @@ export default async function Accueil() {
         </section>
       )}
 
+      {/* Rayon promo — juste après Hot Sales, avec son propre filtrage par catégorie */}
+      <RayonPromo />
+
       {groupes.map(([categorie, produits], i) => (
         <section key={categorie} id={i === 0 ? "produits" : undefined} className="mb-8">
           <div className="flex items-center justify-between px-4 md:px-8 mb-3">
@@ -169,9 +172,6 @@ export default async function Accueil() {
           </div>
         </section>
       ))}
-
-      {/* Rayon promo — bas de l'écran, avec son propre filtrage par catégorie */}
-      <RayonPromo />
 
       <div className="px-4 md:px-8 py-10 text-center">
         <Link href="/a-propos#devenir-vendeur" className="btn-neon px-5 py-3 font-medium text-sm">

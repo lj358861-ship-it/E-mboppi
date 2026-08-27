@@ -21,10 +21,10 @@ type ProduitPromo = {
 };
 
 /**
- * Rayon Promo — placé en bas de l'écran d'accueil, après toutes les
- * catégories. Regroupe les articles en promotion (`enPromo`, décidé par le
- * vendeur) avec son propre filtre par catégorie, indépendant des filtres de
- * la page de recherche.
+ * Rayon Promo — placé juste après la section Hot Sales sur l'accueil.
+ * Regroupe les articles en promotion (`enPromo`, décidé par le vendeur)
+ * avec son propre filtre par catégorie, indépendant des filtres de la page
+ * de recherche.
  *
  * Avant : ce composant interrogeait `type=hot` (Hot Sales, décidé par
  * l'admin) au lieu de `type=promo` — la section "Rayon Promo" affichait donc
@@ -49,7 +49,7 @@ export default function RayonPromo() {
   if (!chargement && produits.length === 0 && !categorie) return null;
 
   return (
-    <section className="mt-10 mb-4 border-t border-stone-200 pt-6">
+    <section className="mb-8 border-t border-stone-200 pt-6">
       <div className="flex items-center justify-between gap-3 px-4 md:px-8 mb-3 flex-wrap">
         <h2 className="font-display text-lg md:text-xl font-semibold text-indigo-900 flex items-center gap-2">
           <Percent className="text-feuille-500" size={18} /> Rayon Promo
