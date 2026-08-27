@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, Clapperboard, Mail, Info, Store, Heart, LogIn, User } from "lucide-react";
+import { Home, Search, Clapperboard, Mail, Info, Store, Heart, LogIn, User, Percent } from "lucide-react";
 
 const liensBas = [
   { href: "/", label: "Accueil", icone: Home },
   { href: "/videos", label: "Vidéos", icone: Clapperboard },
   { href: "/recherche", label: "Recherche", icone: Search },
+  { href: "/promo", label: "Promo", icone: Percent },
   { href: "/contact", label: "Contact", icone: Mail },
   { href: "/a-propos", label: "À propos", icone: Info },
 ];
