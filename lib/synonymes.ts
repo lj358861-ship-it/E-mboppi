@@ -137,7 +137,7 @@ export function elargirTermeRecherche(terme: string, max = 8): string[] {
   const ajouterSynonymesDe = (cle: string) => {
     const trouves = index.get(cle);
     if (!trouves) return;
-    for (const s of trouves) {
+    for (const s of Array.from(trouves)) {
       if (resultats.size >= max) return;
       resultats.add(s);
     }
