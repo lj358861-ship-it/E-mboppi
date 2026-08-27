@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, SlidersHorizontal, Store, Flame, Image as ImageIcon, Clapperboard, Users, Clock } from "lucide-react";
+import { Search, SlidersHorizontal, Store, Flame, Image as ImageIcon, Clapperboard, Users, Clock, SearchX, Sparkles } from "lucide-react";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
 import { CATEGORIES, sousCategoriesPour } from "@/lib/categories";
 import { StatutStock } from "@/lib/stock";
@@ -16,6 +16,7 @@ type Produit = {
   photos: string[];
   statutStock: StatutStock;
   boost: boolean;
+  enPromo: boolean;
   estFavori?: boolean;
   vendeur: { id: string; nomBoutique: string; logoUrl: string | null; ville: string | null; utilisateur: { whatsapp: string } };
 };
@@ -393,16 +394,23 @@ export default function Recherche() {
       ) : (
         <>
           {!chargement && produits.length === 0 && (
-            <p className="text-sm text-indigo-900/50">
-              {onglet === "hot"
-                ? "Aucun article boosté pour le moment."
-                : "Aucun article ne correspond à votre recherche pour le moment."}
-            </p>
+            <div className="flex flex-col items-center justify-center text-center gap-2 border border-dashed border-stone-300 rounded-2xl py-14 px-6">
+              <SearchX size={28} className="text-indigo-900/25" />
+              <p className="text-sm text-indigo-900/50">
+                {onglet === "hot"
+                  ? "Aucun article boosté pour le moment."
+                  : "Aucun article ne correspond à votre recherche pour le moment."}
+              </p>
+            </div>
           )}
           {!chargement && produits.length > 0 && suggestionsFallback && terme.trim() && (
-            <p className="text-sm text-indigo-900/60 mb-3">
-              Aucun résultat exact pour « {terme.trim()} ». Voici des articles qui pourraient vous plaire :
-            </p>
+            <div className="flex items-start gap-2.5 bg-neon-300/15 border border-neon-500/20 text-indigo-900 rounded-2xl px-4 py-3 mb-4">
+              <Sparkles size={16} className="text-neon-600 mt-0.5 flex-shrink-0" />
+              <p className="text-sm leading-snug">
+                <span className="font-medium">Aucun résultat exact pour « {terme.trim()} ».</span>{" "}
+                <span className="text-indigo-900/70">Voici des articles du même genre qui pourraient vous plaire :</span>
+              </p>
+            </div>
           )}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {produits.map((p) => (
@@ -418,7 +426,8 @@ export default function Recherche() {
                 villeVendeur={p.vendeur.ville}
                 whatsappVendeur={p.vendeur.utilisateur.whatsapp}
                 statutStock={p.statutStock}
-                enPromo={p.boost}
+                hotSales={p.boost}
+                enPromotion={p.enPromo}
                 estFavori={p.estFavori}
                 enFeu={onglet === "hot"}
               />

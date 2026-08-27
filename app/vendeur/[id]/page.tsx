@@ -98,7 +98,7 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
 
         <div className="px-5 sm:px-8 pb-6">
           <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-2 pt-3">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-md">
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-md">
               {vendeur.logoUrl ? (
                 <Image src={vendeur.logoUrl} alt={vendeur.nomBoutique} fill sizes="96px" className="object-cover" />
               ) : (
@@ -191,7 +191,8 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
               villeVendeur={vendeur.ville}
               whatsappVendeur={vendeur.utilisateur.whatsapp}
               statutStock={p.statutStock}
-              enPromo={p.boost}
+              hotSales={p.boost}
+              enPromotion={p.enPromo}
               estFavori={favoris.has(p.id)}
             />
           ))}

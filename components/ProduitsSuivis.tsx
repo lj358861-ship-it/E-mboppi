@@ -15,6 +15,7 @@ type ProduitSuivi = {
   photos: string[];
   statutStock: StatutStock;
   boost: boolean;
+  enPromo: boolean;
   estFavori?: boolean;
   vendeur: { id: string; nomBoutique: string; ville: string | null; utilisateur: { whatsapp: string } };
 };
@@ -73,7 +74,8 @@ export default function ProduitsSuivis() {
                 villeVendeur={p.vendeur.ville}
                 whatsappVendeur={p.vendeur.utilisateur.whatsapp}
                 statutStock={p.statutStock}
-                enPromo={p.boost}
+                hotSales={p.boost}
+                enPromotion={p.enPromo}
                 estFavori={p.estFavori}
               />
             </div>

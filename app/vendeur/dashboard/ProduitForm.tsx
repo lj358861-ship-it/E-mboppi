@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ImagePlus, Video } from "lucide-react";
+import { ImagePlus, Video, Percent } from "lucide-react";
 import { CATEGORIES, sousCategoriesPour } from "@/lib/categories";
 import { OPTIONS_STATUT_STOCK, StatutStock } from "@/lib/stock";
 import UploadPhotos, { PhotoUploadee } from "@/components/UploadPhotos";
@@ -19,6 +19,7 @@ export default function ProduitForm() {
     categorie: "",
     description: "",
     statutStock: "DISPONIBLE" as StatutStock,
+    enPromo: false,
   });
   const [photos, setPhotos] = useState<PhotoUploadee[]>([]);
   const [video, setVideo] = useState<VideoUploadee>(null);
@@ -67,7 +68,7 @@ export default function ProduitForm() {
       return;
     }
 
-    setForm({ titre: "", nature: "", prix: "", categorie: "", description: "", statutStock: "DISPONIBLE" });
+    setForm({ titre: "", nature: "", prix: "", categorie: "", description: "", statutStock: "DISPONIBLE", enPromo: false });
     setPhotos([]);
     setVideo(null);
     router.refresh();
@@ -176,6 +177,35 @@ export default function ProduitForm() {
           </option>
         ))}
       </select>
+
+      <button
+        type="button"
+        onClick={() => setForm({ ...form, enPromo: !form.enPromo })}
+        aria-pressed={form.enPromo}
+        className={`flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium border transition-colors ${
+          form.enPromo
+            ? "bg-feuille-500/10 border-feuille-500/40 text-feuille-600"
+            : "bg-stone-50 border-stone-200 text-indigo-900/60"
+        }`}
+      >
+        <span className="flex items-center gap-2">
+          <Percent size={15} /> Mettre cet article en promotion
+        </span>
+        <span
+          className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${
+            form.enPromo ? "bg-feuille-500" : "bg-stone-300"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+              form.enPromo ? "translate-x-4" : ""
+            }`}
+          />
+        </span>
+      </button>
+      <p className="text-xs text-indigo-900/40 -mt-2">
+        Affiche une étiquette « Promo » bien visible sur l&apos;article, gratuitement et à tout moment.
+      </p>
 
       <textarea
         placeholder="Description"

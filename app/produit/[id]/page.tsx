@@ -119,8 +119,9 @@ export default async function PageProduit({ params }: { params: { id: string } }
         {produit.nature && <p className="text-sm text-indigo-900/50 mb-2">{produit.nature}</p>}
 
         <div className="flex items-center gap-3 mb-4 flex-wrap">
-          <p className="font-mono text-mango-600 text-xl font-semibold">
-            {produit.prix.toLocaleString("fr-FR")} F
+          <p className="font-display text-mango-600 text-2xl font-bold tracking-tight leading-none">
+            {produit.prix.toLocaleString("fr-FR")}
+            <span className="text-sm font-semibold text-mango-600/70 ml-1.5">FCFA</span>
           </p>
           {produit.boost && (
             <span className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
@@ -156,8 +157,9 @@ export default async function PageProduit({ params }: { params: { id: string } }
       {/* Barre d'action fixe sur mobile — reste visible pendant le défilement,
           au-dessus de la barre de navigation du bas */}
       <div className="barre-cta-mobile md:hidden fixed left-0 right-0 z-20 flex items-center gap-3 px-4 py-3 bg-white border-t border-stone-200">
-        <p className="font-mono text-mango-600 font-semibold whitespace-nowrap">
-          {produit.prix.toLocaleString("fr-FR")} F
+        <p className="font-display text-mango-600 font-bold text-lg tracking-tight whitespace-nowrap">
+          {produit.prix.toLocaleString("fr-FR")}
+          <span className="text-xs font-semibold text-mango-600/70 ml-1">FCFA</span>
         </p>
         <BoutonContacterWhatsapp
           produitId={produit.id}

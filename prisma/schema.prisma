@@ -41,9 +41,6 @@ model Utilisateur {
 
   favoris            Favori[]
   abonnementsPush    AbonnementPush[]
-
-  messagesEnvoyes    Message[] @relation("MessagesEnvoyes")
-  messagesRecus      Message[] @relation("MessagesRecus")
 }
 
 // Souscription aux notifications push du navigateur (Web Push standard,
@@ -184,26 +181,6 @@ model Avis {
 
   @@unique([appareilId, vendeurId])
   @@index([vendeurId])
-}
-
-// Message — messagerie interne entre un client (ou vendeur) et un vendeur,
-// utilisée par app/api/messages/conversations/route.ts.
-model Message {
-  id             String   @id @default(cuid())
-
-  expediteurId   String
-  expediteur     Utilisateur @relation("MessagesEnvoyes", fields: [expediteurId], references: [id])
-
-  destinataireId String
-  destinataire   Utilisateur @relation("MessagesRecus", fields: [destinataireId], references: [id])
-
-  contenu        String
-  lu             Boolean  @default(false)
-
-  createdAt      DateTime @default(now())
-
-  @@index([expediteurId])
-  @@index([destinataireId])
 }
 
 // Profil d'appareil — le pendant "identité" de Favori/Suivi/Avis : un

@@ -112,7 +112,8 @@ export default async function Accueil() {
                   villeVendeur={p.vendeur.ville}
                   whatsappVendeur={p.vendeur.utilisateur.whatsapp}
                   statutStock={p.statutStock}
-                  enPromo={p.boost}
+                  hotSales={p.boost}
+                  enPromotion={p.enPromo}
                   estFavori={favoris.has(p.id)}
                   enFeu
                 />
@@ -144,7 +145,8 @@ export default async function Accueil() {
                   villeVendeur={p.vendeur.ville}
                   whatsappVendeur={p.vendeur.utilisateur.whatsapp}
                   statutStock={p.statutStock}
-                  enPromo={p.boost}
+                  hotSales={p.boost}
+                  enPromotion={p.enPromo}
                   estFavori={favoris.has(p.id)}
                 />
               </div>

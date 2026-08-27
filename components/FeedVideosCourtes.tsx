@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Heart, MessageCircle, Volume2, VolumeX, Store } from "lucide-react";
+import { Heart, MessageCircle, Volume2, VolumeX, Store, Percent } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
 import { classesBadgeStock, labelStatutStock, StatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
 
@@ -14,6 +14,7 @@ type Produit = {
   videoUrl: string | null;
   statutStock: StatutStock;
   boost: boolean;
+  enPromo: boolean;
   vendeur: { id: string; nomBoutique: string; utilisateur: { whatsapp: string } };
 };
 
@@ -94,6 +95,11 @@ export default function FeedVideosCourtes({ produits }: { produits: Produit[] })
                 {LABEL_BADGE_PROMO}
               </span>
             )}
+            {p.enPromo && (
+              <span className="price-tag tag-hole flex items-center gap-1 bg-feuille-500 text-white text-[10px] font-bold pl-2 pr-3 py-1 shadow-sm">
+                <Percent size={10} /> Promo
+              </span>
+            )}
           </div>
 
           {/* Son on/off */}
@@ -118,8 +124,9 @@ export default function FeedVideosCourtes({ produits }: { produits: Produit[] })
             </Link>
             <Link href={`/produit/${p.id}`}>
               <p className="font-medium text-base leading-snug line-clamp-2 mb-1.5">{p.titre}</p>
-              <span className="font-mono text-mango-400 font-semibold text-sm">
-                {p.prix.toLocaleString("fr-FR")} F
+              <span className="font-display font-bold text-base leading-none tracking-tight text-mango-400 drop-shadow-[0_1px_3px_rgba(0,0,0,0.55)]">
+                {p.prix.toLocaleString("fr-FR")}
+                <span className="text-[11px] font-semibold ml-1 text-mango-300/90">FCFA</span>
               </span>
               {p.statutStock !== "DISPONIBLE" && (
                 <span

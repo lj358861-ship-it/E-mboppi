@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Heart, MessageCircle, Flame, MapPin } from "lucide-react";
+import { Heart, MessageCircle, Flame, MapPin, Percent } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
 import { classesBadgeStock, labelStatutStock, StatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
 
@@ -20,7 +20,10 @@ type Props = {
   whatsappVendeur: string;
   estFavori?: boolean;
   statutStock?: StatutStock;
-  enPromo?: boolean;
+  /** "Hot Sales" — mise en avant payante, décidée uniquement par l'admin (champ `boost`) */
+  hotSales?: boolean;
+  /** "Promo" — le vendeur marque lui-même son article en promotion (champ `enPromo`) */
+  enPromotion?: boolean;
   /** Habillage "carte qui brûle" — réservé aux sections Hot Sales */
   enFeu?: boolean;
 };
@@ -37,7 +40,8 @@ export default function CarteProduitVideo({
   whatsappVendeur,
   estFavori = false,
   statutStock = "DISPONIBLE",
-  enPromo = false,
+  hotSales = false,
+  enPromotion = false,
   enFeu = false,
 }: Props) {
   const [favori, setFavori] = useState(estFavori);
@@ -94,11 +98,16 @@ export default function CarteProduitVideo({
         </div>
       )}
 
-      {(statutStock !== "DISPONIBLE" || enPromo) && (
+      {(statutStock !== "DISPONIBLE" || hotSales || enPromotion) && (
         <div className={`absolute left-2.5 z-10 flex flex-col gap-1 items-start ${enFeu ? "top-12" : "top-3"}`}>
-          {enPromo && (
+          {hotSales && (
             <span className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-full font-bold ${CLASSES_BADGE_PROMO}`}>
               <Flame size={11} /> {LABEL_BADGE_PROMO}
+            </span>
+          )}
+          {enPromotion && (
+            <span className="price-tag tag-hole flex items-center gap-1 bg-feuille-500 text-white text-[10px] font-bold pl-2 pr-3 py-1 shadow-sm">
+              <Percent size={10} /> Promo
             </span>
           )}
           {statutStock !== "DISPONIBLE" && (
@@ -132,8 +141,9 @@ export default function CarteProduitVideo({
         </Link>
         <p className="font-medium text-sm leading-snug line-clamp-2 mb-1">{titre}</p>
         <div className="flex items-center justify-between">
-          <span className="font-mono text-mango-400 font-semibold text-sm">
-            {prix.toLocaleString("fr-FR")} F
+          <span className="font-display font-bold text-base leading-none tracking-tight text-mango-400 drop-shadow-[0_1px_3px_rgba(0,0,0,0.55)]">
+            {prix.toLocaleString("fr-FR")}
+            <span className="text-[11px] font-semibold ml-1 text-mango-300/90">FCFA</span>
           </span>
           <a
             href={lienContacterVendeur(whatsappVendeur, titre)}

@@ -59,9 +59,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
     if (body.categorie !== undefined) donnees.categorie = body.categorie || null;
     if (body.nature !== undefined) donnees.nature = body.nature || null;
-    // NB : "enPromo" (Hot Sales) n'est volontairement pas modifiable ici — un
-    // vendeur ne peut pas décider lui-même de la mise en avant de son article.
-    // Seul l'admin peut le faire, via le champ "boost" plus haut dans ce fichier.
+    // "enPromo" (étiquette "Promo" simple) est décidée librement par le
+    // vendeur lui-même sur ses propres articles. À ne pas confondre avec
+    // "boost" (badge "Hot Sales", payant, décidé uniquement par l'admin —
+    // voir plus haut dans ce fichier).
+    if (typeof body.enPromo === "boolean") donnees.enPromo = body.enPromo;
     if (body.statutStock !== undefined) {
       if (!STATUTS_STOCK_VALIDES.includes(body.statutStock)) {
         return NextResponse.json({ erreur: "Statut de stock invalide" }, { status: 400 });

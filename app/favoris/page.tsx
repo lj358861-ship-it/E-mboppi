@@ -14,6 +14,7 @@ type Favori = {
     photos: string[];
     statutStock: StatutStock;
     boost: boolean;
+    enPromo: boolean;
     vendeur: { id: string; nomBoutique: string; utilisateur?: { whatsapp: string } };
   };
 };
@@ -55,7 +56,8 @@ export default function Favoris() {
             nomBoutique={produit.vendeur.nomBoutique}
             whatsappVendeur={produit.vendeur.utilisateur?.whatsapp || ""}
             statutStock={produit.statutStock}
-            enPromo={produit.boost}
+            hotSales={produit.boost}
+            enPromotion={produit.enPromo}
             estFavori
           />
         ))}

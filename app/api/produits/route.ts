@@ -4,7 +4,7 @@ import { lireSession } from "@/lib/auth";
 import { lireIdAppareil } from "@/lib/appareil";
 import { PHOTOS_MAX_PAR_ARTICLE } from "@/lib/media-limits";
 import { classerParPertinenceMulti } from "@/lib/fuzzy";
-import { elargirTermeRecherche } from "@/lib/synonymes";
+import { elargirTermeRecherche, inferCategorieDepuisTerme } from "@/lib/synonymes";
 
 const SELECTION_VENDEUR = {
   select: {
@@ -144,16 +144,23 @@ export async function GET(req: NextRequest) {
   }
 
   // --- Passe 3 : filet de sécurité — vraiment aucune correspondance, même
-  // approximative. Plutôt qu'une page vide, on propose des articles proches :
-  // même catégorie/sous-catégorie si les filtres actifs le permettent, sinon
-  // les articles du moment. On le signale via `suggestionsFallback` pour que
-  // le client affiche "Aucun résultat exact, mais voici..." au lieu d'une
-  // simple absence de résultat.
+  // approximative. Plutôt qu'une page vide (ou pire, un article sans rapport
+  // pris au hasard dans tout le catalogue), on propose des articles proches :
+  //   1) même catégorie/sous-catégorie si les filtres actifs le permettent ;
+  //   2) sinon, la catégorie devinée depuis le terme tapé (ex : "déodorant"
+  //      → on montre un autre article "Beauté & Cosmétiques", jamais un sac) ;
+  //   3) sinon seulement, les articles du moment, tous genres confondus.
+  // On le signale via `suggestionsFallback` pour que le client affiche
+  // "Aucun résultat exact, mais voici..." au lieu d'une simple absence de
+  // résultat, ou de faux positifs qui donneraient une impression amateur.
+  const categorieDevinee = !categorie && !nature ? inferCategorieDepuisTerme(q) : null;
+
   const suggestions = await prisma.produit.findMany({
     where: {
       visible: true,
       ...(categorie ? { categorie } : {}),
       ...(nature ? { nature } : {}),
+      ...(categorieDevinee ? { categorie: categorieDevinee } : {}),
       ...filtreType,
     },
     include: { vendeur: SELECTION_VENDEUR },
@@ -161,8 +168,23 @@ export async function GET(req: NextRequest) {
     take: TAILLE_PAGE,
   });
 
+  // La catégorie devinée n'a rien donné (aucun article de ce genre en
+  // boutique) : on retombe sur les articles du moment plutôt qu'une page
+  // vide, mais le message côté client reste honnête ("aucun résultat exact").
+  const suggestionsFinales =
+    suggestions.length > 0
+      ? suggestions
+      : categorieDevinee
+      ? await prisma.produit.findMany({
+          where: { visible: true, ...filtreType },
+          include: { vendeur: SELECTION_VENDEUR },
+          orderBy: [{ boost: "desc" }, { createdAt: "desc" }],
+          take: TAILLE_PAGE,
+        })
+      : suggestions;
+
   return NextResponse.json({
-    produits: await avecFavoris(suggestions),
+    produits: await avecFavoris(suggestionsFinales),
     hasMore: false,
     suggestionsFallback: true,
   });
@@ -217,10 +239,10 @@ export async function POST(req: NextRequest) {
       videoPublicId: body.videoPublicId || null,
       statutStock,
       nature: body.nature || null,
-      // "Hot Sales" ne peut jamais être choisi par le vendeur à la création :
-      // seul un boost payant, validé par l'admin (`boost`), place un article
-      // en avant. `enPromo` reste à false ici.
-      enPromo: false,
+      // "enPromo" (étiquette "Promo") : le vendeur peut la choisir librement
+      // dès la création. "boost" ("Hot Sales"), lui, reste exclusivement géré
+      // par l'admin après un boost payant — jamais modifiable ici.
+      enPromo: Boolean(body.enPromo),
       visible: abonnementActif,
     },
   });

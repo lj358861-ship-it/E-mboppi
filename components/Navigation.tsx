@@ -133,7 +133,7 @@ export default function Navigation() {
 
       {/* Mobile bottom nav — façon TikTok */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around h-16 bg-indigo-950/95 backdrop-blur border-t border-white/5"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around min-h-16 bg-indigo-950/95 backdrop-blur border-t border-white/5"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {liensBas.map((l) => {
@@ -143,12 +143,16 @@ export default function Navigation() {
             <Link
               key={l.href}
               href={l.href}
-              className={`flex flex-col items-center gap-0.5 px-2.5 py-1 text-[10px] transition-colors ${
+              className={`flex flex-col items-center gap-0.5 py-1.5 min-w-[56px] text-[10px] font-medium transition-colors ${
                 actif ? "text-neon-400" : "text-white/55"
               }`}
             >
-              <span className={actif ? "neon-text" : ""}>
-                <Icone size={21} />
+              <span
+                className={`flex items-center justify-center w-9 h-7 rounded-full transition-colors ${
+                  actif ? "bg-neon-500/15 neon-text" : ""
+                }`}
+              >
+                <Icone size={20} />
               </span>
               {l.label}
             </Link>

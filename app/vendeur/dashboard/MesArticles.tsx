@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Pencil, Trash2, ImagePlus, Video, X, Zap, Eye, MousePointerClick } from "lucide-react";
+import { Pencil, Trash2, ImagePlus, Video, X, Zap, Eye, MousePointerClick, Percent } from "lucide-react";
 import { CATEGORIES, sousCategoriesPour } from "@/lib/categories";
 import { OPTIONS_STATUT_STOCK, classesBadgeStock, labelStatutStock, StatutStock } from "@/lib/stock";
 import { lienDemanderBoost } from "@/lib/whatsapp";
@@ -24,6 +24,7 @@ export type ArticleVendeur = {
   visible: boolean;
   statutStock: StatutStock;
   boost: boolean;
+  enPromo: boolean;
   vues: number;
   clicsContact: number;
 };
@@ -31,6 +32,7 @@ export type ArticleVendeur = {
 export default function MesArticles({ produits, nomBoutique }: { produits: ArticleVendeur[]; nomBoutique: string }) {
   const [idEnEdition, setIdEnEdition] = useState<string | null>(null);
   const [idEnSuppression, setIdEnSuppression] = useState<string | null>(null);
+  const [idEnBascule, setIdEnBascule] = useState<string | null>(null);
   const router = useRouter();
 
   async function supprimer(p: ArticleVendeur) {
@@ -48,6 +50,27 @@ export default function MesArticles({ produits, nomBoutique }: { produits: Artic
       alert("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
     } finally {
       setIdEnSuppression(null);
+    }
+  }
+
+  async function basculerPromo(p: ArticleVendeur) {
+    setIdEnBascule(p.id);
+    try {
+      const res = await fetch(`/api/produits/${p.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enPromo: !p.enPromo }),
+      });
+      if (!res.ok) {
+        const resultat = await res.json().catch(() => ({}));
+        alert(resultat.erreur || "Échec de la mise à jour. Réessayez.");
+        return;
+      }
+      router.refresh();
+    } catch {
+      alert("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
+    } finally {
+      setIdEnBascule(null);
     }
   }
 
@@ -78,7 +101,10 @@ export default function MesArticles({ produits, nomBoutique }: { produits: Artic
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-indigo-900 truncate">{p.titre}</p>
-              <p className="text-xs text-indigo-900/50">{p.prix.toLocaleString("fr-FR")} F</p>
+              <p className="font-display text-sm font-bold text-mango-600 tracking-tight">
+                {p.prix.toLocaleString("fr-FR")}
+                <span className="text-[10px] font-semibold text-mango-600/70 ml-1">FCFA</span>
+              </p>
               <p className="flex items-center gap-2.5 text-[11px] text-indigo-900/40 mt-0.5">
                 <span className="flex items-center gap-0.5">
                   <Eye size={11} /> {p.vues}
@@ -115,6 +141,18 @@ export default function MesArticles({ produits, nomBoutique }: { produits: Artic
                   <Zap size={10} /> Booster
                 </a>
               )}
+              <button
+                type="button"
+                onClick={() => basculerPromo(p)}
+                disabled={idEnBascule === p.id}
+                className={`price-tag tag-hole flex items-center gap-1 text-[10px] font-bold pl-2 pr-3 py-1 transition-colors disabled:opacity-50 ${
+                  p.enPromo
+                    ? "bg-feuille-500 text-white"
+                    : "bg-transparent border border-feuille-500/50 text-feuille-600 hover:bg-feuille-500/10"
+                }`}
+              >
+                <Percent size={10} /> {p.enPromo ? "Promo active" : "Mettre en promo"}
+              </button>
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
               <button
@@ -162,6 +200,7 @@ function FormulaireEdition({
     categorie: produit.categorie || "",
     description: produit.description || "",
     statutStock: produit.statutStock,
+    enPromo: produit.enPromo,
   });
   const [photos, setPhotos] = useState<PhotoUploadee[]>(
     produit.photos.map((url, i) => ({ url, publicId: produit.photosPublicIds[i] || url }))
@@ -203,6 +242,7 @@ function FormulaireEdition({
           categorie: form.categorie || null,
           description: form.description || null,
           statutStock: form.statutStock,
+          enPromo: form.enPromo,
           photos: photos.map((p) => p.url),
           photosPublicIds: photos.map((p) => p.publicId),
           videoUrl: video?.url || null,
@@ -322,6 +362,32 @@ function FormulaireEdition({
           </option>
         ))}
       </select>
+
+      <button
+        type="button"
+        onClick={() => setForm({ ...form, enPromo: !form.enPromo })}
+        aria-pressed={form.enPromo}
+        className={`flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium border transition-colors ${
+          form.enPromo
+            ? "bg-feuille-500/10 border-feuille-500/40 text-feuille-600"
+            : "bg-white border-stone-200 text-indigo-900/60"
+        }`}
+      >
+        <span className="flex items-center gap-2">
+          <Percent size={15} /> Mettre cet article en promotion
+        </span>
+        <span
+          className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${
+            form.enPromo ? "bg-feuille-500" : "bg-stone-300"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+              form.enPromo ? "translate-x-4" : ""
+            }`}
+          />
+        </span>
+      </button>
 
       <textarea
         placeholder="Description"
