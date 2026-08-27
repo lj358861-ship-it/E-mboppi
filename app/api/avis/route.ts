@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { idAppareil, lireIdAppareil } from "@/lib/appareil";
+import { idAppareil, lireIdAppareil, obtenirProfilAppareil } from "@/lib/appareil";
 
 // GET /api/avis?vendeurId=xxx — liste des avis d'une boutique, moyenne, et
 // si CET appareil a déjà laissé un avis (pour afficher "Modifier mon avis"
@@ -26,23 +26,29 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/avis — crée ou met à jour l'avis de cet appareil pour une boutique.
+// Le pseudo affiché à côté du commentaire (voir /mon-profil) est toujours
+// celui du profil d'appareil courant — jamais une valeur envoyée librement
+// par le client — pour que le pseudo affiché soit fiable pour les autres
+// visiteurs et pour l'admin en cas de modération.
 export async function POST(req: NextRequest) {
   const appareilId = idAppareil();
-  const { vendeurId, note, commentaire, nomClient } = await req.json().catch(() => ({}));
+  const { vendeurId, note, commentaire } = await req.json().catch(() => ({}));
 
   if (!vendeurId || typeof note !== "number" || note < 1 || note > 5) {
     return NextResponse.json({ erreur: "Note invalide (1 à 5 requis)" }, { status: 400 });
   }
 
+  const profil = await obtenirProfilAppareil();
+
   const avis = await prisma.avis.upsert({
     where: { appareilId_vendeurId: { appareilId, vendeurId } },
-    update: { note, commentaire: commentaire?.slice(0, 300) || null, nomClient: nomClient?.slice(0, 60) || null },
+    update: { note, commentaire: commentaire?.slice(0, 300) || null, nomClient: profil.pseudo },
     create: {
       appareilId,
       vendeurId,
       note,
       commentaire: commentaire?.slice(0, 300) || null,
-      nomClient: nomClient?.slice(0, 60) || null,
+      nomClient: profil.pseudo,
     },
   });
 

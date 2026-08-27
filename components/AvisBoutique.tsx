@@ -157,7 +157,10 @@ export default function AvisBoutique({ vendeurId }: { vendeurId: string }) {
         <ul className="space-y-3">
           {avis.slice(0, 6).map((a) => (
             <li key={a.id} className="border-t border-stone-100 pt-3 first:border-t-0 first:pt-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {a.nomClient && (
+                  <span className="text-xs font-semibold text-indigo-900">{a.nomClient}</span>
+                )}
                 <Etoiles note={a.note} taille={13} />
                 <span className="text-xs text-indigo-900/40">
                   {new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}

@@ -45,9 +45,13 @@ export async function GET(req: NextRequest) {
   const categorie = req.nextUrl.searchParams.get("categorie") || undefined;
   // "nature" = sous-catégorie préselectionnée (Homme/Femme/Enfant, Parfum, Smartphone...)
   const nature = req.nextUrl.searchParams.get("nature") || undefined;
-  const type = req.nextUrl.searchParams.get("type") || undefined; // "photo" | "video" | "hot"
+  const type = req.nextUrl.searchParams.get("type") || undefined; // "photo" | "video" | "hot" | "promo" | "tous"
   const prixMin = req.nextUrl.searchParams.get("prixMin");
   const prixMax = req.nextUrl.searchParams.get("prixMax");
+  // "tri" — tri explicite demandé par le client (prix croissant/décroissant).
+  // Sans valeur, on retombe sur l'ordre par défaut (pertinence / plus récent).
+  const triParam = req.nextUrl.searchParams.get("tri");
+  const tri = triParam === "prix_asc" || triParam === "prix_desc" ? triParam : null;
   // Pagination : "skip" pour le défilement infini de la page recherche.
   const skip = Math.max(0, Number(req.nextUrl.searchParams.get("skip")) || 0);
   const TAILLE_PAGE = 24;
@@ -59,33 +63,46 @@ export async function GET(req: NextRequest) {
   const filtreType =
     type === "photo" ? { videoUrl: null } : type === "video" ? { videoUrl: { not: null } } : {};
 
+  // Onglet "Hot Sales" : uniquement les articles boostés (payant, décidé par
+  // l'admin — un vendeur ne peut pas s'y placer lui-même). Onglet "Promo" :
+  // uniquement les articles marqués en promotion par leur vendeur.
+  // IMPORTANT : ce filtre fait partie de `filtreBase`, donc il s'applique à
+  // TOUTES les passes de recherche ci-dessous (y compris le classement
+  // approximatif et les suggestions de secours). Avant, il n'était appliqué
+  // que sur la liste "sans recherche" : dès qu'un client tapait un terme
+  // dans l'onglet Hot Sales ou Promo, ce filtre disparaissait et des
+  // articles non boostés/non promo s'affichaient avec le badge Hot Sales —
+  // c'était le bug remonté.
+  const filtreLabel = type === "hot" ? { boost: true } : type === "promo" ? { enPromo: true } : {};
+
   const filtreBase = {
     visible: true,
     ...(categorie ? { categorie } : {}),
     ...(nature ? { nature } : {}),
     ...(Object.keys(filtrePrix).length ? { prix: filtrePrix } : {}),
     ...filtreType,
+    ...filtreLabel,
   };
 
-  // Onglet "Hot Sales" : uniquement les articles boostés (payant, décidé par
-  // l'admin) — un vendeur ne peut pas s'y placer lui-même.
-  if (type === "hot" && !q) {
-    const produits = await prisma.produit.findMany({
-      where: { ...filtreBase, boost: true },
-      include: { vendeur: SELECTION_VENDEUR },
-      orderBy: [{ boostedAt: "desc" }, { createdAt: "desc" }],
-      skip,
-      take: TAILLE_PAGE + 1,
-    });
-    const hasMore = produits.length > TAILLE_PAGE;
-    return NextResponse.json({ produits: await avecFavoris(produits.slice(0, TAILLE_PAGE)), hasMore });
-  }
+  // Ordre par défaut : les onglets Hot Sales / Promo mettent en avant les
+  // articles les plus récemment mis en avant ; les autres, les plus boostés
+  // puis les plus récents. Un tri explicite (prix) prend toujours le dessus.
+  const ordreParDefaut =
+    type === "hot" || type === "promo"
+      ? [{ boostedAt: "desc" as const }, { createdAt: "desc" as const }]
+      : [{ boost: "desc" as const }, { createdAt: "desc" as const }];
+  const ordre =
+    tri === "prix_asc"
+      ? [{ prix: "asc" as const }]
+      : tri === "prix_desc"
+      ? [{ prix: "desc" as const }]
+      : ordreParDefaut;
 
   if (!q) {
     const produits = await prisma.produit.findMany({
       where: filtreBase,
       include: { vendeur: SELECTION_VENDEUR },
-      orderBy: [{ boost: "desc" }, { createdAt: "desc" }],
+      orderBy: ordre,
       skip,
       take: TAILLE_PAGE + 1,
     });
@@ -109,7 +126,7 @@ export async function GET(req: NextRequest) {
       ]),
     },
     include: { vendeur: SELECTION_VENDEUR },
-    orderBy: [{ boost: "desc" }, { createdAt: "desc" }],
+    orderBy: ordre,
     skip,
     take: TAILLE_PAGE + 1,
   });
@@ -133,9 +150,13 @@ export async function GET(req: NextRequest) {
     take: 500,
   });
 
-  const classes = classerParPertinenceMulti(termesElargis, candidats, (p) =>
+  let classes = classerParPertinenceMulti(termesElargis, candidats, (p) =>
     [p.titre, p.nature || "", p.categorie || "", p.vendeur.nomBoutique].join(" ")
   );
+
+  // Un tri prix explicite prime sur le classement par pertinence.
+  if (tri === "prix_asc") classes = [...classes].sort((a, b) => a.prix - b.prix);
+  else if (tri === "prix_desc") classes = [...classes].sort((a, b) => b.prix - a.prix);
 
   if (classes.length > 0) {
     const page = classes.slice(skip, skip + TAILLE_PAGE);
@@ -155,6 +176,9 @@ export async function GET(req: NextRequest) {
   // résultat, ou de faux positifs qui donneraient une impression amateur.
   const categorieDevinee = !categorie && !nature ? inferCategorieDepuisTerme(q) : null;
 
+  // `filtreLabel` reste appliqué ici : dans l'onglet Hot Sales ou Promo, les
+  // suggestions de secours doivent rester des articles boostés / en promo —
+  // jamais un article ordinaire affiché à tort avec le badge Hot Sales.
   const suggestions = await prisma.produit.findMany({
     where: {
       visible: true,
@@ -162,9 +186,10 @@ export async function GET(req: NextRequest) {
       ...(nature ? { nature } : {}),
       ...(categorieDevinee ? { categorie: categorieDevinee } : {}),
       ...filtreType,
+      ...filtreLabel,
     },
     include: { vendeur: SELECTION_VENDEUR },
-    orderBy: [{ boost: "desc" }, { createdAt: "desc" }],
+    orderBy: ordre,
     take: TAILLE_PAGE,
   });
 
@@ -176,9 +201,9 @@ export async function GET(req: NextRequest) {
       ? suggestions
       : categorieDevinee
       ? await prisma.produit.findMany({
-          where: { visible: true, ...filtreType },
+          where: { visible: true, ...filtreType, ...filtreLabel },
           include: { vendeur: SELECTION_VENDEUR },
-          orderBy: [{ boost: "desc" }, { createdAt: "desc" }],
+          orderBy: ordre,
           take: TAILLE_PAGE,
         })
       : suggestions;

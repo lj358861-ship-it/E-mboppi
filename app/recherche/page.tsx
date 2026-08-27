@@ -1,9 +1,24 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { Suspense, useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, SlidersHorizontal, Store, Flame, Image as ImageIcon, Clapperboard, Users, Clock, SearchX, Sparkles } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import {
+  Search,
+  SlidersHorizontal,
+  Store,
+  Flame,
+  Image as ImageIcon,
+  Clapperboard,
+  Users,
+  Clock,
+  SearchX,
+  Sparkles,
+  LayoutGrid,
+  Percent,
+  ArrowDownUp,
+} from "lucide-react";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
 import { CATEGORIES, sousCategoriesPour } from "@/lib/categories";
 import { StatutStock } from "@/lib/stock";
@@ -31,13 +46,25 @@ type VendeurResultat = {
 
 type Suggestion = { texte: string; type: "produit" | "boutique" };
 
-type Onglet = "hot" | "photo" | "video" | "vendeurs";
+type Onglet = "tous" | "hot" | "promo" | "photo" | "video" | "vendeurs";
 
+// "Tous" en premier — l'onglet par défaut, pour que le client voie
+// l'ensemble du catalogue avant les sous-ensembles (Hot Sales, Promo...).
 const ONGLETS: { valeur: Onglet; label: string; icone: typeof Flame }[] = [
+  { valeur: "tous", label: "Tous", icone: LayoutGrid },
   { valeur: "hot", label: "Hot Sales", icone: Flame },
+  { valeur: "promo", label: "Promo", icone: Percent },
   { valeur: "photo", label: "Annonces", icone: ImageIcon },
   { valeur: "video", label: "Vidéos", icone: Clapperboard },
   { valeur: "vendeurs", label: "Vendeurs", icone: Users },
+];
+
+type Tri = "" | "prix_asc" | "prix_desc";
+
+const OPTIONS_TRI: { valeur: Tri; label: string }[] = [
+  { valeur: "", label: "Pertinence" },
+  { valeur: "prix_asc", label: "Prix croissant" },
+  { valeur: "prix_desc", label: "Prix décroissant" },
 ];
 
 const CLE_HISTORIQUE = "emboppi:recherches-recentes";
@@ -60,13 +87,32 @@ function enregistrerDansHistorique(terme: string) {
 }
 
 export default function Recherche() {
-  const [terme, setTerme] = useState("");
-  const [categorie, setCategorie] = useState("");
+  return (
+    <Suspense fallback={null}>
+      <RechercheContenu />
+    </Suspense>
+  );
+}
+
+function RechercheContenu() {
+  const paramsUrl = useSearchParams();
+  // Les liens "Voir tout" de l'accueil (par catégorie, Hot Sales, Promo...)
+  // pointent vers /recherche avec ces paramètres — on les lit une seule fois
+  // au montage pour ouvrir directement le bon onglet / la bonne catégorie.
+  const ongletInitial = (paramsUrl.get("onglet") as Onglet | null) || "tous";
+  const categorieInitiale = paramsUrl.get("categorie") || "";
+  const termeInitial = paramsUrl.get("q") || "";
+
+  const [terme, setTerme] = useState(termeInitial);
+  const [categorie, setCategorie] = useState(categorieInitiale);
   const [sousCategorie, setSousCategorie] = useState("");
   const [prixMin, setPrixMin] = useState("");
   const [prixMax, setPrixMax] = useState("");
+  const [tri, setTri] = useState<Tri>("");
   const [filtresOuverts, setFiltresOuverts] = useState(false);
-  const [onglet, setOnglet] = useState<Onglet>("hot");
+  const [onglet, setOnglet] = useState<Onglet>(
+    ONGLETS.some((o) => o.valeur === ongletInitial) ? ongletInitial : "tous"
+  );
 
   const [produits, setProduits] = useState<Produit[]>([]);
   const [vendeurs, setVendeurs] = useState<VendeurResultat[]>([]);
@@ -110,7 +156,15 @@ export default function Recherche() {
 
   const rechercher = useCallback(
     async (
-      params: { q: string; categorie: string; nature: string; prixMin: string; prixMax: string; onglet: Onglet },
+      params: {
+        q: string;
+        categorie: string;
+        nature: string;
+        prixMin: string;
+        prixMax: string;
+        onglet: Onglet;
+        tri: Tri;
+      },
       skip: number,
       ajouter: boolean
     ) => {
@@ -134,7 +188,8 @@ export default function Recherche() {
       if (params.nature) query.set("nature", params.nature);
       if (params.prixMin) query.set("prixMin", params.prixMin);
       if (params.prixMax) query.set("prixMax", params.prixMax);
-      query.set("type", params.onglet);
+      if (params.onglet !== "tous") query.set("type", params.onglet);
+      if (params.tri) query.set("tri", params.tri);
       if (skip) query.set("skip", String(skip));
 
       const res = await fetch(`/api/produits?${query.toString()}`);
@@ -150,12 +205,12 @@ export default function Recherche() {
 
   useEffect(() => {
     const delai = setTimeout(() => {
-      rechercher({ q: terme, categorie, nature: sousCategorie, prixMin, prixMax, onglet }, 0, false);
+      rechercher({ q: terme, categorie, nature: sousCategorie, prixMin, prixMax, onglet, tri }, 0, false);
       if (terme.trim()) enregistrerDansHistorique(terme);
     }, 350);
     return () => clearTimeout(delai);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [terme, categorie, sousCategorie, prixMin, prixMax, onglet]);
+  }, [terme, categorie, sousCategorie, prixMin, prixMax, onglet, tri]);
 
   // --- Défilement infini : charge la page suivante quand la sentinelle apparaît ---
   useEffect(() => {
@@ -165,7 +220,11 @@ export default function Recherche() {
     const observateur = new IntersectionObserver(
       (entrees) => {
         if (entrees[0].isIntersecting && hasMore && !chargement && !chargementSuite) {
-          rechercher({ q: terme, categorie, nature: sousCategorie, prixMin, prixMax, onglet }, produits.length, true);
+          rechercher(
+            { q: terme, categorie, nature: sousCategorie, prixMin, prixMax, onglet, tri },
+            produits.length,
+            true
+          );
         }
       },
       { rootMargin: "400px" }
@@ -173,7 +232,7 @@ export default function Recherche() {
     observateur.observe(sentinelle);
     return () => observateur.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMore, chargement, chargementSuite, produits.length, terme, categorie, sousCategorie, prixMin, prixMax, onglet]);
+  }, [hasMore, chargement, chargementSuite, produits.length, terme, categorie, sousCategorie, prixMin, prixMax, onglet, tri]);
 
   // La liste "nature du produit" dépend de la catégorie choisie — on
   // réinitialise si la catégorie change et n'a plus d'options en commun.
@@ -195,7 +254,7 @@ export default function Recherche() {
     setHistorique([]);
   }
 
-  const filtresActifs = Boolean(categorie || sousCategorie || prixMin || prixMax);
+  const filtresActifs = Boolean(categorie || sousCategorie || prixMin || prixMax || tri);
   const filtresPertinents = onglet !== "vendeurs";
   const menuDeroulantOuvert = champActif && (suggestions.length > 0 || (!terme.trim() && historique.length > 0));
 
@@ -356,6 +415,22 @@ export default function Recherche() {
             onChange={(e) => setPrixMax(e.target.value)}
             className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-base outline-none focus:border-indigo-800"
           />
+          <label className="flex items-center gap-2 sm:col-span-3 pt-1">
+            <span className="flex items-center gap-1 text-xs font-medium text-indigo-900/60 flex-shrink-0">
+              <ArrowDownUp size={13} /> Trier par
+            </span>
+            <select
+              value={tri}
+              onChange={(e) => setTri(e.target.value as Tri)}
+              className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-800"
+            >
+              {OPTIONS_TRI.map((o) => (
+                <option key={o.valeur} value={o.valeur}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       )}
 
@@ -399,6 +474,8 @@ export default function Recherche() {
               <p className="text-sm text-indigo-900/50">
                 {onglet === "hot"
                   ? "Aucun article boosté pour le moment."
+                  : onglet === "promo"
+                  ? "Aucun article en promo pour le moment."
                   : "Aucun article ne correspond à votre recherche pour le moment."}
               </p>
             </div>
@@ -429,7 +506,7 @@ export default function Recherche() {
                 hotSales={p.boost}
                 enPromotion={p.enPromo}
                 estFavori={p.estFavori}
-                enFeu={onglet === "hot"}
+                enFeu={p.boost}
               />
             ))}
           </div>

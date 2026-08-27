@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Flame } from "lucide-react";
+import Link from "next/link";
+import { Percent } from "lucide-react";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
 import { CATEGORIES } from "@/lib/categories";
 import { StatutStock } from "@/lib/stock";
@@ -21,8 +22,13 @@ type ProduitPromo = {
 
 /**
  * Rayon Promo — placé en bas de l'écran d'accueil, après toutes les
- * catégories. Regroupe tous les articles en promo/boostés avec son propre
- * filtre par catégorie, indépendant des filtres de la page de recherche.
+ * catégories. Regroupe les articles en promotion (`enPromo`, décidé par le
+ * vendeur) avec son propre filtre par catégorie, indépendant des filtres de
+ * la page de recherche.
+ *
+ * Avant : ce composant interrogeait `type=hot` (Hot Sales, décidé par
+ * l'admin) au lieu de `type=promo` — la section "Rayon Promo" affichait donc
+ * en réalité les articles boostés, pas les articles en promo. Corrigé.
  */
 export default function RayonPromo() {
   const [categorie, setCategorie] = useState("");
@@ -31,7 +37,7 @@ export default function RayonPromo() {
 
   useEffect(() => {
     setChargement(true);
-    const query = new URLSearchParams({ type: "hot" });
+    const query = new URLSearchParams({ type: "promo" });
     if (categorie) query.set("categorie", categorie);
 
     fetch(`/api/produits?${query.toString()}`)
@@ -46,20 +52,25 @@ export default function RayonPromo() {
     <section className="mt-10 mb-4 border-t border-stone-200 pt-6">
       <div className="flex items-center justify-between gap-3 px-4 md:px-8 mb-3 flex-wrap">
         <h2 className="font-display text-lg md:text-xl font-semibold text-indigo-900 flex items-center gap-2">
-          <Flame className="text-mango-500" size={20} /> Rayon Promo
+          <Percent className="text-feuille-500" size={18} /> Rayon Promo
         </h2>
-        <select
-          value={categorie}
-          onChange={(e) => setCategorie(e.target.value)}
-          className="bg-white border border-stone-200 rounded-full px-3 py-1.5 text-xs font-medium text-indigo-900/70 outline-none focus:border-indigo-800"
-        >
-          <option value="">Toutes les catégories</option>
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2 flex-wrap">
+          <select
+            value={categorie}
+            onChange={(e) => setCategorie(e.target.value)}
+            className="bg-white border border-stone-200 rounded-full px-3 py-1.5 text-xs font-medium text-indigo-900/70 outline-none focus:border-indigo-800"
+          >
+            <option value="">Toutes les catégories</option>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <Link href="/promo" className="text-xs font-medium text-neon-600 hover:underline">
+            Voir tout
+          </Link>
+        </div>
       </div>
 
       {chargement && <p className="px-4 md:px-8 text-sm text-indigo-900/50">Chargement du rayon promo…</p>}
@@ -87,7 +98,6 @@ export default function RayonPromo() {
               hotSales={p.boost}
               enPromotion={p.enPromo}
               estFavori={p.estFavori}
-              enFeu
             />
           </div>
         ))}
@@ -95,3 +105,4 @@ export default function RayonPromo() {
     </section>
   );
 }
+

@@ -94,7 +94,7 @@ export default async function Accueil() {
             <h2 className="font-display text-lg md:text-xl font-semibold text-indigo-900 flex items-center gap-2">
               <Flame className="text-mango-500" size={20} /> Hot Sales
             </h2>
-            <Link href="/recherche" className="text-xs font-medium text-neon-600 hover:underline">
+            <Link href="/recherche?onglet=hot" className="text-xs font-medium text-neon-600 hover:underline">
               Voir tout
             </Link>
           </div>
@@ -130,6 +130,21 @@ export default async function Accueil() {
               <span className="w-1.5 h-4 rounded-full bg-gradient-neon" />
               {categorie}
             </h2>
+            {/* "Autres articles" est un regroupement d'affichage pour les
+                articles sans catégorie renseignée (categorie=null en base) —
+                il ne correspond à aucune vraie valeur filtrable, donc le
+                lien "Voir tout" pointe vers la liste complète sans filtre
+                dans ce cas précis. */}
+            <Link
+              href={
+                categorie === "Autres articles"
+                  ? "/recherche?onglet=tous"
+                  : `/recherche?onglet=tous&categorie=${encodeURIComponent(categorie)}`
+              }
+              className="text-xs font-medium text-neon-600 hover:underline flex-shrink-0"
+            >
+              Voir tout
+            </Link>
           </div>
           <div className="flex gap-3 overflow-x-auto scrollbar-none px-4 md:px-8 pb-2 snap-x">
             {produits.map((p) => (

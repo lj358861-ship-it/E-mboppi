@@ -17,6 +17,7 @@ const liensDesktop = [
   { href: "/", label: "Accueil" },
   { href: "/videos", label: "Vidéos courtes" },
   { href: "/recherche", label: "Recherche" },
+  { href: "/promo", label: "Promo" },
   { href: "/favoris", label: "Favoris" },
   { href: "/contact", label: "Contact" },
   { href: "/a-propos", label: "À propos" },
