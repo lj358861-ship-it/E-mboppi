@@ -16,12 +16,20 @@
 html {
   /* Empêche tout débordement horizontal accidentel (ex: éléments larges sur petit écran) */
   overflow-x: hidden;
+  /* Empêche iOS/Android d'ajuster automatiquement la taille du texte (et donc
+     le zoom apparent) indépendamment de notre verrou de zoom clavier ci-dessous */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Bloque le rebond de défilement horizontal qui peut donner l'impression
+     que l'écran "bascule" à gauche/droite sur mobile */
+  overscroll-behavior-x: none;
 }
 
 body {
   background-color: #FAFAF8;
   color: #16274F;
   overflow-x: hidden;
+  overscroll-behavior-x: none;
   /* Longueur minimale garantie même sur les navigateurs mobiles qui rétrécissent le viewport */
   min-height: 100dvh;
 }
