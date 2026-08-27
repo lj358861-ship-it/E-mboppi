@@ -11,14 +11,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ erreur: "vendeurId manquant" }, { status: 400 });
   }
 
-  const [avis, appareilId] = [
-    await prisma.avis.findMany({
-      where: { vendeurId },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    }),
-    lireIdAppareil(),
-  ];
+  const avis = await prisma.avis.findMany({
+    where: { vendeurId },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+  });
+  const appareilId = lireIdAppareil();
 
   const nbAvis = avis.length;
   const moyenne = nbAvis > 0 ? avis.reduce((s, a) => s + a.note, 0) / nbAvis : 0;
