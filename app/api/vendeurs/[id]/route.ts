@@ -52,9 +52,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   await prisma.abonnement.deleteMany({ where: { vendeurId: vendeur.id } });
   await prisma.vendeur.delete({ where: { id: vendeur.id } });
 
-  await prisma.message.deleteMany({
-    where: { OR: [{ expediteurId: utilisateurId }, { destinataireId: utilisateurId }] },
-  });
   await prisma.favori.deleteMany({ where: { clientId: utilisateurId } });
   await prisma.utilisateur.delete({ where: { id: utilisateurId } });
 
