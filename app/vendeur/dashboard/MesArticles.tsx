@@ -88,33 +88,56 @@ export default function MesArticles({ produits, nomBoutique }: { produits: Artic
             }}
           />
         ) : (
-          <div
-            key={p.id}
-            className="flex items-center gap-3 bg-white border border-stone-200 rounded-xl px-4 py-3"
-          >
-            <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-stone-100 flex-shrink-0">
-              {p.photos[0] ? (
-                <Image src={p.photos[0]} alt={p.titre} fill sizes="48px" className="object-cover" />
-              ) : p.videoUrl ? (
-                <video src={p.videoUrl} muted className="w-full h-full object-cover" />
-              ) : null}
+          <div key={p.id} className="bg-white border border-stone-200 rounded-xl px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-stone-100 flex-shrink-0">
+                {p.photos[0] ? (
+                  <Image src={p.photos[0]} alt={p.titre} fill sizes="48px" className="object-cover" />
+                ) : p.videoUrl ? (
+                  <video src={p.videoUrl} muted className="w-full h-full object-cover" />
+                ) : null}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-indigo-900 truncate">{p.titre}</p>
+                <p className="font-display text-sm font-bold text-mango-600 tracking-tight">
+                  {p.prix.toLocaleString("fr-FR")}
+                  <span className="text-[10px] font-semibold text-mango-600/70 ml-1">FCFA</span>
+                </p>
+                <p className="flex items-center gap-2.5 text-[11px] text-indigo-900/40 mt-0.5">
+                  <span className="flex items-center gap-0.5">
+                    <Eye size={11} /> {p.vues}
+                  </span>
+                  <span className="flex items-center gap-0.5">
+                    <MousePointerClick size={11} /> {p.clicsContact}
+                  </span>
+                </p>
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIdEnEdition(p.id)}
+                  aria-label="Modifier"
+                  className="p-2 rounded-full text-indigo-900/50 hover:text-indigo-900 hover:bg-stone-100 transition-colors"
+                >
+                  <Pencil size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => supprimer(p)}
+                  disabled={idEnSuppression === p.id}
+                  aria-label="Supprimer"
+                  className="p-2 rounded-full text-piment-500/70 hover:text-piment-500 hover:bg-piment-500/10 transition-colors disabled:opacity-50"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-indigo-900 truncate">{p.titre}</p>
-              <p className="font-display text-sm font-bold text-mango-600 tracking-tight">
-                {p.prix.toLocaleString("fr-FR")}
-                <span className="text-[10px] font-semibold text-mango-600/70 ml-1">FCFA</span>
-              </p>
-              <p className="flex items-center gap-2.5 text-[11px] text-indigo-900/40 mt-0.5">
-                <span className="flex items-center gap-0.5">
-                  <Eye size={11} /> {p.vues}
-                </span>
-                <span className="flex items-center gap-0.5">
-                  <MousePointerClick size={11} /> {p.clicsContact}
-                </span>
-              </p>
-            </div>
-            <div className="flex flex-col items-end gap-1">
+
+            {/* Badges & actions — sur leur propre ligne, qui passe à la
+                suivante (flex-wrap) au lieu d'être compressée dans la même
+                rangée que l'image et le titre : évite l'écran "coupé en
+                deux" avec un grand vide au milieu sur petit écran. */}
+            <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
               <span
                 className={`text-xs px-2 py-1 rounded-full font-medium ${
                   p.visible ? "bg-feuille-500/15 text-feuille-600" : "bg-stone-200 text-indigo-900/50"
@@ -152,25 +175,6 @@ export default function MesArticles({ produits, nomBoutique }: { produits: Artic
                 }`}
               >
                 <Percent size={10} /> {p.enPromo ? "Promo active" : "Mettre en promo"}
-              </button>
-            </div>
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <button
-                type="button"
-                onClick={() => setIdEnEdition(p.id)}
-                aria-label="Modifier"
-                className="p-2 rounded-full text-indigo-900/50 hover:text-indigo-900 hover:bg-stone-100 transition-colors"
-              >
-                <Pencil size={15} />
-              </button>
-              <button
-                type="button"
-                onClick={() => supprimer(p)}
-                disabled={idEnSuppression === p.id}
-                aria-label="Supprimer"
-                className="p-2 rounded-full text-piment-500/70 hover:text-piment-500 hover:bg-piment-500/10 transition-colors disabled:opacity-50"
-              >
-                <Trash2 size={15} />
               </button>
             </div>
           </div>
