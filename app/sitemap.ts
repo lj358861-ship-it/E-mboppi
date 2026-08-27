@@ -1,6 +1,13 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 
+// Ce sitemap dépend de la base de données (produits, vendeurs), qui n'est
+// pas joignable pendant le build sur Railway (réseau privé disponible
+// seulement une fois l'app démarrée). On force donc un rendu dynamique,
+// exécuté à la demande (à chaque requête sur /sitemap.xml) plutôt qu'au
+// moment du build.
+export const dynamic = "force-dynamic";
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://e-mboppi-production.up.railway.app";
 
 // Pages statiques toujours indexables.
