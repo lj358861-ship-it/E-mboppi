@@ -212,8 +212,27 @@ function BoutonsAction({ produit }: { produit: Produit }) {
   const [notationOuverte, setNotationOuverte] = useState(false);
   const [noteChoisie, setNoteChoisie] = useState(0);
   const [commentaire, setCommentaire] = useState("");
-  const [noteEnvoyee, setNoteEnvoyee] = useState<number | null>(null);
   const [envoiNote, setEnvoiNote] = useState(false);
+  const [erreurNote, setErreurNote] = useState<string | null>(null);
+
+  // Récupère l'avis déjà laissé par CET appareil sur CET article, s'il
+  // existe — sans ça le bouton "Noter" oubliait la note à chaque fois
+  // qu'on faisait défiler le fil (le composant est remonté pour chaque
+  // vidéo) et ne proposait jamais "Modifier".
+  useEffect(() => {
+    let annule = false;
+    fetch(`/api/avis-produit?produitId=${produit.id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (annule || !d?.monAvis) return;
+        setNoteChoisie(d.monAvis.note);
+        setCommentaire(d.monAvis.commentaire || "");
+      })
+      .catch(() => {});
+    return () => {
+      annule = true;
+    };
+  }, [produit.id]);
 
   async function basculerFavori() {
     setFavori((f) => !f);
@@ -228,21 +247,23 @@ function BoutonsAction({ produit }: { produit: Produit }) {
     e.preventDefault();
     if (noteChoisie < 1) return;
     setEnvoiNote(true);
+    setErreurNote(null);
     try {
       // Note sur CET article précis (voir lib/notes.ts) — la note de la
       // boutique est ensuite calculée en agrégeant les notes de tous ses
       // articles, on ne note jamais la boutique directement ici.
+      // upsert côté API : renoter met à jour l'avis existant au lieu d'en
+      // créer un doublon, donc "noter à nouveau" = modifier sa note.
       const reponse = await fetch("/api/avis-produit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ produitId: produit.id, note: noteChoisie, commentaire }),
       });
+      const donnees = await reponse.json().catch(() => ({}));
       if (!reponse.ok) {
-        const donnees = await reponse.json().catch(() => ({}));
-        alert(donnees?.erreur || "Impossible d'envoyer l'avis.");
+        setErreurNote(donnees?.erreur || "Impossible d'envoyer l'avis.");
         return;
       }
-      setNoteEnvoyee(noteChoisie);
       setNotationOuverte(false);
     } finally {
       setEnvoiNote(false);
@@ -285,6 +306,7 @@ function BoutonsAction({ produit }: { produit: Produit }) {
               maxLength={300}
               className="bg-white/10 border border-white/20 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-white/50 outline-none focus:border-mango-400 resize-none"
             />
+            {erreurNote && <p className="text-[11px] text-piment-400">{erreurNote}</p>}
             <div className="flex items-center gap-2">
               <button
                 type="submit"
@@ -308,9 +330,9 @@ function BoutonsAction({ produit }: { produit: Produit }) {
           className="flex flex-col items-center gap-1 text-white"
         >
           <span className="bg-black/35 backdrop-blur rounded-full p-2.5">
-            <Star size={22} className={noteEnvoyee ? "fill-mango-400 text-mango-400" : "text-white"} />
+            <Star size={22} className={noteChoisie > 0 ? "fill-mango-400 text-mango-400" : "text-white"} />
           </span>
-          <span className="text-[10px]">Noter</span>
+          <span className="text-[10px]">{noteChoisie > 0 ? "Modifier" : "Noter"}</span>
         </button>
       </div>
 

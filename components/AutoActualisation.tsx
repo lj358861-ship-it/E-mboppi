@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 /**
@@ -20,33 +20,30 @@ import { useRouter } from "next/navigation";
  * Usage : poser <AutoActualisation /> une fois dans la page (ex. app/page.tsx).
  * Aucun rendu visuel — juste un minuteur.
  */
-export default function AutoActualisation({ intervalleMs = 20000 }: { intervalleMs?: number }) {
+export default function AutoActualisation({ intervalleMs = 15000 }: { intervalleMs?: number }) {
   const router = useRouter();
-  const enPause = useRef(false);
 
   useEffect(() => {
-    function actualiserSiVisible() {
-      if (document.visibilityState === "visible") {
-        router.refresh();
-      }
+    // Pas de vérification de visibilité ici : sur certaines webviews mobiles
+    // (app enveloppée type Capacitor), document.visibilityState reste bloqué
+    // sur une valeur incorrecte et empêchait le rafraîchissement de se
+    // déclencher — on rafraîchit donc systématiquement à l'intervalle, plus
+    // immédiatement à chaque retour au premier plan détecté par CE navigateur.
+    const minuteur = window.setInterval(() => router.refresh(), intervalleMs);
+
+    function actualiserAuRetour() {
+      router.refresh();
     }
 
-    // Reprend au premier plan (retour sur l'app/l'onglet) → actualisation
-    // immédiate, sans attendre le prochain tick de l'intervalle.
-    function gererVisibilite() {
-      if (document.visibilityState === "visible" && !enPause.current) {
-        router.refresh();
-      }
-    }
-
-    const minuteur = window.setInterval(actualiserSiVisible, intervalleMs);
-    document.addEventListener("visibilitychange", gererVisibilite);
-    window.addEventListener("focus", gererVisibilite);
+    document.addEventListener("visibilitychange", actualiserAuRetour);
+    window.addEventListener("focus", actualiserAuRetour);
+    window.addEventListener("pageshow", actualiserAuRetour);
 
     return () => {
       window.clearInterval(minuteur);
-      document.removeEventListener("visibilitychange", gererVisibilite);
-      window.removeEventListener("focus", gererVisibilite);
+      document.removeEventListener("visibilitychange", actualiserAuRetour);
+      window.removeEventListener("focus", actualiserAuRetour);
+      window.removeEventListener("pageshow", actualiserAuRetour);
     };
   }, [router, intervalleMs]);
 
