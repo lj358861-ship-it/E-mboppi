@@ -79,7 +79,7 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(donnees.title, {
       body: donnees.body,
       icon: "/icon-192.png",
-      badge: "/icon-192.png",
+      badge: "/icon-192-maskable.png",
       data: { url: donnees.url },
     })
   );

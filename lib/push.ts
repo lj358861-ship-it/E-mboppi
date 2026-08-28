@@ -94,3 +94,22 @@ export async function envoyerNotificationAppareil(
   const souscriptions = await prisma.abonnementPush.findMany({ where: { appareilId } });
   return envoyerAuxSouscriptions(souscriptions, payload, "/");
 }
+
+/**
+ * CLIENT (diffusion) — notification à TOUTES les souscriptions clients
+ * (tous appareils confondus), sans ciblage. Réservée aux rappels génériques
+ * du marché (voir lib/notifications.ts::rappelsMarche) — n'envoie jamais aux
+ * souscriptions vendeur (utilisateurId), qui reçoivent uniquement leurs
+ * propres alertes de boutique.
+ */
+export async function envoyerNotificationTousClients(payload: {
+  titre: string;
+  corps: string;
+  url?: string;
+}) {
+  if (!notificationsPushDisponibles()) return { envoyees: 0 };
+  const souscriptions = await prisma.abonnementPush.findMany({
+    where: { appareilId: { not: null } },
+  });
+  return envoyerAuxSouscriptions(souscriptions, payload, "/");
+}

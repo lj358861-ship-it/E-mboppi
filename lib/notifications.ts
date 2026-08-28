@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { envoyerNotificationUtilisateur, envoyerNotificationAppareil } from "@/lib/push";
+import { envoyerNotificationUtilisateur, envoyerNotificationAppareil, envoyerNotificationTousClients } from "@/lib/push";
 import { elargirTermeRecherche } from "@/lib/synonymes";
 
 /**
@@ -126,5 +126,49 @@ export async function enregistrerRecherche(appareilId: string | null, terme: str
     where: { appareilId },
     update: { terme: terme.trim(), updatedAt: new Date() },
     create: { appareilId, terme: terme.trim() },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// RAPPELS MARCHÉ — diffusion générale (pas de ciblage)
+// ---------------------------------------------------------------------------
+
+/**
+ * Trois rappels génériques envoyés à TOUS les clients (voir
+ * lib/push.ts::envoyerNotificationTousClients), pensés pour trois moments
+ * de la journée bien espacés — matin, midi, soir — afin d'attirer l'attention
+ * sans lasser (jamais plus d'un envoi par créneau, voir
+ * app/api/notifications/rappel-marche/route.ts et le cron Railway associé).
+ * Le ton reprend volontairement le parler du marché Mboppi.
+ */
+export const RAPPELS_MARCHE: { titre: string; corps: string }[] = [
+  {
+    titre: "Asso, tu ne prends rien aujourd'hui ?",
+    corps: "Le marché t'attend — viens jeter un œil avant que ça parte.",
+  },
+  {
+    titre: "Les prix aujourd'hui, c'est la magie ma personne",
+    corps: "Des articles à petit prix chez nos vendeurs, là maintenant.",
+  },
+  {
+    titre: "On ferme bientôt, dépêche-toi",
+    corps: "Un dernier tour au marché avant la fin de la journée ?",
+  },
+];
+
+/**
+ * Envoie le rappel marché n°`index` (0, 1 ou 2 — voir RAPPELS_MARCHE) à tous
+ * les clients. `index` vient du cron Railway qui appelle cette route à
+ * l'heure voulue (voir README.md) — jamais calculé ici, pour rester simple
+ * et prévisible : chaque créneau horaire envoie toujours le même message.
+ */
+export async function notifierRappelMarche(index: number) {
+  const rappel = RAPPELS_MARCHE[index];
+  if (!rappel) return { envoyees: 0 };
+
+  return envoyerNotificationTousClients({
+    titre: rappel.titre,
+    corps: rappel.corps,
+    url: "/",
   });
 }

@@ -112,6 +112,22 @@ Dans les **Variables** du service web, ajoutez (voir `.env.example`) :
 10. Commande : `curl "https://VOTRE-DOMAINE.up.railway.app/api/abonnements/verifier?secret=VOTRE_CRON_SECRET"`
 11. Planification : `0 1 * * *` (tous les jours à 1h du matin).
 
+### g) Mettre en place les rappels marché (3 notifications/jour, cron)
+Trois rappels génériques ("Asso, tu ne prends rien aujourd'hui ?", etc. —
+voir `lib/notifications.ts::RAPPELS_MARCHE`) sont envoyés à tous les clients
+ayant activé les notifications. Trois créneaux bien espacés pour attirer
+l'attention sans lasser : créez **trois** Cron Jobs Railway, un par créneau.
+
+| Créneau | Commande | Planification |
+|---|---|---|
+| Matin | `curl "https://VOTRE-DOMAINE.up.railway.app/api/notifications/rappel-marche?secret=VOTRE_CRON_SECRET&index=0"` | `0 9 * * *` (9h) |
+| Midi | `curl "https://VOTRE-DOMAINE.up.railway.app/api/notifications/rappel-marche?secret=VOTRE_CRON_SECRET&index=1"` | `0 13 * * *` (13h) |
+| Soir | `curl "https://VOTRE-DOMAINE.up.railway.app/api/notifications/rappel-marche?secret=VOTRE_CRON_SECRET&index=2"` | `0 19 * * *` (19h) |
+
+Même `CRON_SECRET` que l'étape f). Pour changer les textes, éditez
+`RAPPELS_MARCHE` dans `lib/notifications.ts` — l'ordre du tableau correspond
+à l'`index` de chaque créneau ci-dessus.
+
 C'est tout — le site est en ligne, l'abonnement s'auto-gère, et l'admin peut
 valider les paiements depuis `/admin`.
 
