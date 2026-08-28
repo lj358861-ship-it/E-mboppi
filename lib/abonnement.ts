@@ -9,11 +9,20 @@ export const MONTANT_ABONNEMENT = 2000;
 export const VERIFIE_ANCIENNETE_JOURS = 60;
 
 /**
- * Un vendeur est "vérifié" si son abonnement est actif ET que sa boutique
- * existe depuis au moins VERIFIE_ANCIENNETE_JOURS jours — un signal de
- * confiance simple pour un marché où l'identité n'est pas vérifiée par pièce.
+ * Un vendeur est "vérifié" (badge affiché aux clients) de deux façons
+ * indépendantes, l'une suffit :
+ * - Automatique : abonnement actif ET boutique existant depuis au moins
+ *   VERIFIE_ANCIENNETE_JOURS jours — un signal de confiance simple pour un
+ *   marché où l'identité n'est pas vérifiée par pièce.
+ * - Manuelle : l'admin a certifié la boutique (champ `certifie`, voir
+ *   app/admin/AdminVendeurs.tsx) — permet de vérifier un vendeur de confiance
+ *   dès son arrivée, sans attendre les 60 jours.
  */
-export function estVendeurVerifie(vendeur: { createdAt: Date }, abonnement?: { statut: string } | null): boolean {
+export function estVendeurVerifie(
+  vendeur: { createdAt: Date; certifie?: boolean },
+  abonnement?: { statut: string } | null
+): boolean {
+  if (vendeur.certifie) return true;
   if (!abonnement || abonnement.statut !== "ACTIF") return false;
   const ancienneteMs = Date.now() - new Date(vendeur.createdAt).getTime();
   const ancienneteJours = ancienneteMs / (1000 * 60 * 60 * 24);
