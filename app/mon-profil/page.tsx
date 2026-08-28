@@ -58,8 +58,8 @@ export default function MonProfil() {
           variante="client"
         />
         <p className="text-xs text-indigo-900/40 mt-2">
-          Soyez prévenu quand une boutique que vous suivez publie un nouvel article, ou qu'un
-          article en promo correspond à l'une de vos recherches.
+          Soyez prévenu quand une boutique que vous suivez publie un nouvel article, ou qu&apos;un
+          article en promo correspond à l&apos;une de vos recherches.
         </p>
       </div>
 
