@@ -115,6 +115,7 @@ model Vendeur {
   suivis          Suivi[]
   avis            Avis[]           @relation("AvisRecu")
   avisPublies     Avis[]           @relation("AvisAuteur")
+  avisProduitPublies AvisProduit[] @relation("AvisProduitAuteur")
 }
 
 model Abonnement {
@@ -177,6 +178,7 @@ model Produit {
   clicsContact Int      @default(0)
 
   favoris      Favori[]
+  avisProduit  AvisProduit[]
 
   @@index([vendeurId])
   @@index([categorie])
@@ -230,6 +232,32 @@ model Avis {
 
   @@unique([appareilId, vendeurId])
   @@index([vendeurId])
+  @@index([auteurVendeurId])
+}
+
+// Avis client sur un article précis (par opposition à Avis, qui note la
+// boutique dans son ensemble) — même logique appareil anonyme, un seul
+// avis par appareil et par article. Utilisé par la modération admin
+// (voir app/api/admin/avis/route.ts et app/api/avis-produit/[id]/route.ts).
+model AvisProduit {
+  id          String   @id @default(cuid())
+  produitId   String
+  produit     Produit  @relation(fields: [produitId], references: [id])
+
+  appareilId  String
+  nomClient   String?
+  note        Int
+  commentaire String?
+
+  // Même règle que Avis.auteurCertifie — figé au moment de la publication.
+  auteurVendeurId String?
+  auteurVendeur   Vendeur? @relation("AvisProduitAuteur", fields: [auteurVendeurId], references: [id])
+  auteurCertifie  Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+
+  @@unique([appareilId, produitId])
+  @@index([produitId])
   @@index([auteurVendeurId])
 }
 
