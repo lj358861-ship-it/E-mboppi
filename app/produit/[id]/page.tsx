@@ -12,6 +12,7 @@ import BoutonFermer from "./BoutonFermer";
 import BoutonContacterWhatsapp from "@/components/BoutonContacterWhatsapp";
 import BoutonPartager from "@/components/BoutonPartager";
 import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
+import AvisProduit from "@/components/AvisProduit";
 
 export const dynamic = "force-dynamic";
 
@@ -152,6 +153,10 @@ export default async function PageProduit({ params }: { params: { id: string } }
           />
           <BoutonPartager titre={produit.titre} url={urlProduit} />
         </div>
+      </div>
+
+      <div className="md:col-span-2">
+        <AvisProduit produitId={produit.id} />
       </div>
 
       {/* Barre d'action fixe sur mobile — reste visible pendant le défilement,
