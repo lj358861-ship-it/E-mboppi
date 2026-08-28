@@ -69,8 +69,11 @@ export async function notesMoyennesBoutiques(
     sommeParVendeur.set(vendeurId, courant);
   }
 
+  // Array.from(...) plutôt que "for...of" directement sur la Map : le
+  // tsconfig du projet cible un JS antérieur à ES2015, qui ne permet pas
+  // d'itérer une Map sans le flag --downlevelIteration.
   const carte = new Map<string, { noteMoyenne: number; nbAvis: number }>();
-  for (const [vendeurId, { somme, nb }] of sommeParVendeur) {
+  for (const [vendeurId, { somme, nb }] of Array.from(sommeParVendeur)) {
     carte.set(vendeurId, { noteMoyenne: nb > 0 ? somme / nb : 0, nbAvis: nb });
   }
   return carte;
