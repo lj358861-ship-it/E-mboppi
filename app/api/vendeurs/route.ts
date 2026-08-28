@@ -27,6 +27,7 @@ export async function GET() {
       nom: v.utilisateur.nom,
       telephone: v.utilisateur.telephone,
       whatsapp: v.utilisateur.whatsapp,
+      certifie: v.certifie,
       abonnementId: abo?.id ?? null,
       statutAbonnement: abo?.statut ?? "AUCUN",
       joursRestants: abo ? joursRestants(abo.dateFin) : 0,

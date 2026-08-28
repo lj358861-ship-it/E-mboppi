@@ -98,6 +98,13 @@ model Vendeur {
   logoPublicId    String?
   createdAt       DateTime @default(now())
 
+  // Certification manuelle par l'admin (autocollant bleu, voir
+  // app/admin/AdminVendeurs.tsx) — à ne pas confondre avec le badge "Vendeur
+  // vérifié" automatique (abonnement actif + ancienneté, voir
+  // lib/abonnement.ts::estVendeurVerifie). Sert aussi à faire remonter ces
+  // boutiques en tête de /boutiques.
+  certifie        Boolean  @default(false)
+
   produits        Produit[]
   abonnements     Abonnement[]
   suivis          Suivi[]
