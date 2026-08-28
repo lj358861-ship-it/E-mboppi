@@ -229,14 +229,19 @@ function BoutonsAction({ produit }: { produit: Produit }) {
     if (noteChoisie < 1) return;
     setEnvoiNote(true);
     try {
-      // E-Mboppi n'a pas d'avis par article, seulement par boutique (voir
-      // lib/notes.ts et app/api/avis/route.ts) — noter/commenter un produit
-      // ici note en fait sa boutique.
-      await fetch("/api/avis", {
+      // Note sur CET article précis (voir lib/notes.ts) — la note de la
+      // boutique est ensuite calculée en agrégeant les notes de tous ses
+      // articles, on ne note jamais la boutique directement ici.
+      const reponse = await fetch("/api/avis-produit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vendeurId: produit.vendeur.id, note: noteChoisie, commentaire }),
+        body: JSON.stringify({ produitId: produit.id, note: noteChoisie, commentaire }),
       });
+      if (!reponse.ok) {
+        const donnees = await reponse.json().catch(() => ({}));
+        alert(donnees?.erreur || "Impossible d'envoyer l'avis.");
+        return;
+      }
       setNoteEnvoyee(noteChoisie);
       setNotationOuverte(false);
     } finally {
