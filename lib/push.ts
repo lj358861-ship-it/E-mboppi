@@ -113,3 +113,21 @@ export async function envoyerNotificationTousClients(payload: {
   });
   return envoyerAuxSouscriptions(souscriptions, payload, "/");
 }
+
+/**
+ * DIFFUSION ADMIN — notification à TOUTES les souscriptions, clients ET
+ * vendeurs confondus, sans distinction. Réservée au bouton "Envoyer à tous"
+ * du tableau de bord admin (voir app/api/admin/notifications/route.ts) —
+ * sert notamment à vérifier que le push fonctionne bien en conditions
+ * réelles ("recall" de test), au-delà des diffusions ciblées ci-dessus.
+ */
+export async function envoyerNotificationTous(payload: {
+  titre: string;
+  corps: string;
+  url?: string;
+}) {
+  if (!notificationsPushDisponibles()) return { envoyees: 0, total: 0 };
+  const souscriptions = await prisma.abonnementPush.findMany();
+  const { envoyees } = await envoyerAuxSouscriptions(souscriptions, payload, "/");
+  return { envoyees, total: souscriptions.length };
+}

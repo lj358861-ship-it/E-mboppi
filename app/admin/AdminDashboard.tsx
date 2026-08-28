@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Store, TrendingUp, Zap, LayoutGrid, Sparkles, MessageSquare } from "lucide-react";
+import { Users, Store, TrendingUp, Zap, LayoutGrid, Sparkles, MessageSquare, BellRing } from "lucide-react";
 import AdminVendeurs from "./AdminVendeurs";
 import AdminAnnonces from "./AdminAnnonces";
 import AdminAvis from "./AdminAvis";
+import AdminNotifications from "./AdminNotifications";
 
 type Stats = {
   chiffreAffaires: number;
@@ -22,7 +23,7 @@ const formatFCFA = (n: number) =>
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
-  const [onglet, setOnglet] = useState<"apercu" | "vendeurs" | "annonces" | "avis">("apercu");
+  const [onglet, setOnglet] = useState<"apercu" | "vendeurs" | "annonces" | "avis" | "notifications">("apercu");
 
   async function chargerStats() {
     const res = await fetch("/api/admin/stats");
@@ -48,6 +49,9 @@ export default function AdminDashboard() {
         </OngletBtn>
         <OngletBtn actif={onglet === "avis"} onClick={() => setOnglet("avis")} icon={<MessageSquare size={15} />}>
           Avis
+        </OngletBtn>
+        <OngletBtn actif={onglet === "notifications"} onClick={() => setOnglet("notifications")} icon={<BellRing size={15} />}>
+          Notifications
         </OngletBtn>
       </div>
 
@@ -93,6 +97,7 @@ export default function AdminDashboard() {
       {onglet === "vendeurs" && <AdminVendeurs onChangement={chargerStats} />}
       {onglet === "annonces" && <AdminAnnonces onChangement={chargerStats} />}
       {onglet === "avis" && <AdminAvis />}
+      {onglet === "notifications" && <AdminNotifications />}
     </div>
   );
 }
