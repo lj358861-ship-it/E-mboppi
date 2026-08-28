@@ -113,7 +113,8 @@ model Vendeur {
   produits        Produit[]
   abonnements     Abonnement[]
   suivis          Suivi[]
-  avis            Avis[]
+  avis            Avis[]           @relation("AvisRecu")
+  avisPublies     Avis[]           @relation("AvisAuteur")
 }
 
 model Abonnement {
@@ -206,17 +207,30 @@ model Suivi {
 model Avis {
   id          String   @id @default(cuid())
   vendeurId   String
-  vendeur     Vendeur  @relation(fields: [vendeurId], references: [id])
+  vendeur     Vendeur  @relation("AvisRecu", fields: [vendeurId], references: [id])
 
   appareilId  String
   nomClient   String?
   note        Int
   commentaire String?
 
+  // Un vendeur connecté peut aussi être client d'une autre boutique (on ne
+  // sait jamais) — s'il laisse un avis et que SA PROPRE boutique est
+  // certifiée/vérifiée (voir lib/abonnement.ts::estVendeurVerifie) au
+  // moment de l'avis, celui-ci s'affiche sous le nom de sa boutique + badge
+  // vérifié au lieu du pseudo anonyme habituel. auteurCertifie est figé au
+  // moment de la publication (comme un badge "achat vérifié"), pour ne pas
+  // dépendre d'un statut qui pourrait changer plus tard — voir
+  // app/api/avis/route.ts.
+  auteurVendeurId String?
+  auteurVendeur   Vendeur? @relation("AvisAuteur", fields: [auteurVendeurId], references: [id])
+  auteurCertifie  Boolean  @default(false)
+
   createdAt   DateTime @default(now())
 
   @@unique([appareilId, vendeurId])
   @@index([vendeurId])
+  @@index([auteurVendeurId])
 }
 
 // Profil d'appareil — le pendant "identité" de Favori/Suivi/Avis : un

@@ -137,7 +137,7 @@ export default function CarteProduitVideo({
           className="flex items-center gap-1 text-xs opacity-80 mb-0.5 hover:underline hover:opacity-100 w-fit"
         >
           {nomBoutique}
-          {verifie && <BadgeVendeurVerifie taille={11} />}
+          {verifie && <BadgeVendeurVerifie taille={11} variante="icone" />}
           {villeVendeur && (
             <span className="flex items-center gap-0.5 opacity-70 font-normal">
               <MapPin size={10} /> {villeVendeur}

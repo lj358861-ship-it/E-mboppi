@@ -26,7 +26,10 @@ type Produit = {
 type Filtre = "tous" | "promo" | "hot" | string;
 
 export default function FeedVideosCourtes({ produits }: { produits: Produit[] }) {
-  const [coupe, setCoupe] = useState(true);
+  // Son activé d'office (les visiteurs ne devraient pas avoir à cliquer pour
+  // entendre le son) — reste tout de même modifiable via le bouton
+  // Volume2/VolumeX, pour ceux qui préfèrent couper.
+  const [coupe, setCoupe] = useState(false);
   const [filtre, setFiltre] = useState<Filtre>("tous");
   const conteneurRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
@@ -171,7 +174,7 @@ export default function FeedVideosCourtes({ produits }: { produits: Produit[] })
               className="flex items-center gap-1.5 text-xs opacity-90 mb-1 w-fit hover:underline"
             >
               <Store size={13} /> {p.vendeur.nomBoutique}
-              {p.vendeur.verifie && <BadgeVendeurVerifie taille={11} />}
+              {p.vendeur.verifie && <BadgeVendeurVerifie taille={11} variante="icone" />}
             </Link>
             <Link href={`/produit/${p.id}`}>
               <p className="font-medium text-base leading-snug line-clamp-2 mb-1.5">{p.titre}</p>
@@ -207,6 +210,8 @@ export default function FeedVideosCourtes({ produits }: { produits: Produit[] })
 function BoutonsAction({ produit }: { produit: Produit }) {
   const [favori, setFavori] = useState(false);
   const [notationOuverte, setNotationOuverte] = useState(false);
+  const [noteChoisie, setNoteChoisie] = useState(0);
+  const [commentaire, setCommentaire] = useState("");
   const [noteEnvoyee, setNoteEnvoyee] = useState<number | null>(null);
   const [envoiNote, setEnvoiNote] = useState(false);
 
@@ -219,18 +224,20 @@ function BoutonsAction({ produit }: { produit: Produit }) {
     });
   }
 
-  async function noter(n: number) {
+  async function envoyerAvis(e: React.FormEvent) {
+    e.preventDefault();
+    if (noteChoisie < 1) return;
     setEnvoiNote(true);
     try {
       // E-Mboppi n'a pas d'avis par article, seulement par boutique (voir
-      // lib/notes.ts et app/api/avis/route.ts) — noter un produit ici note
-      // en fait sa boutique.
+      // lib/notes.ts et app/api/avis/route.ts) — noter/commenter un produit
+      // ici note en fait sa boutique.
       await fetch("/api/avis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vendeurId: produit.vendeur.id, note: n }),
+        body: JSON.stringify({ vendeurId: produit.vendeur.id, note: noteChoisie, commentaire }),
       });
-      setNoteEnvoyee(n);
+      setNoteEnvoyee(noteChoisie);
       setNotationOuverte(false);
     } finally {
       setEnvoiNote(false);
@@ -248,19 +255,48 @@ function BoutonsAction({ produit }: { produit: Produit }) {
 
       <div className="relative flex flex-col items-center">
         {notationOuverte && (
-          <div className="absolute bottom-full mb-2 flex flex-col items-center gap-1 bg-black/60 backdrop-blur rounded-full py-2 px-1.5">
-            {[5, 4, 3, 2, 1].map((n) => (
+          <form
+            onSubmit={envoyerAvis}
+            className="absolute bottom-full right-0 mb-2 w-60 flex flex-col gap-2 bg-black/70 backdrop-blur rounded-2xl p-3"
+          >
+            <div className="flex items-center justify-center gap-1">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setNoteChoisie(n)}
+                  aria-label={`${n} étoile${n > 1 ? "s" : ""}`}
+                  className="text-white/90 hover:text-mango-400 transition-colors"
+                >
+                  <Star size={20} className={n <= noteChoisie ? "fill-mango-400 text-mango-400" : ""} />
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={commentaire}
+              onChange={(e) => setCommentaire(e.target.value)}
+              placeholder="Votre avis (facultatif)"
+              rows={2}
+              maxLength={300}
+              className="bg-white/10 border border-white/20 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-white/50 outline-none focus:border-mango-400 resize-none"
+            />
+            <div className="flex items-center gap-2">
               <button
-                key={n}
-                onClick={() => noter(n)}
-                disabled={envoiNote}
-                aria-label={`${n} étoile${n > 1 ? "s" : ""}`}
-                className="text-white/90 hover:text-mango-400 transition-colors disabled:opacity-50"
+                type="submit"
+                disabled={noteChoisie < 1 || envoiNote}
+                className="flex-1 bg-mango-500 hover:bg-mango-600 disabled:opacity-50 transition-colors text-white text-xs font-medium py-1.5 rounded-full"
               >
-                <Star size={16} className={n <= (noteEnvoyee || 0) ? "fill-mango-400 text-mango-400" : ""} />
+                {envoiNote ? "Envoi…" : "Publier"}
               </button>
-            ))}
-          </div>
+              <button
+                type="button"
+                onClick={() => setNotationOuverte(false)}
+                className="text-xs text-white/70 px-2"
+              >
+                Annuler
+              </button>
+            </div>
+          </form>
         )}
         <button
           onClick={() => setNotationOuverte((o) => !o)}

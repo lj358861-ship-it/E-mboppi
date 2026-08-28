@@ -100,7 +100,7 @@ export default function ProduitsSuivis() {
               )}
             </span>
             {v.nomBoutique}
-            {v.verifie && <BadgeVendeurVerifie taille={11} />}
+            {v.verifie && <BadgeVendeurVerifie taille={11} variante="icone" />}
           </Link>
         ))}
       </div>

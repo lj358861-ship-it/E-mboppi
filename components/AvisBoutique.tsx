@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Star, MessageSquarePlus, Loader2 } from "lucide-react";
+import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
 
 type Avis = {
   id: string;
   note: number;
   commentaire: string | null;
   nomClient: string | null;
+  auteurCertifie?: boolean;
   createdAt: string;
 };
 
@@ -159,7 +161,10 @@ export default function AvisBoutique({ vendeurId }: { vendeurId: string }) {
             <li key={a.id} className="border-t border-stone-100 pt-3 first:border-t-0 first:pt-0">
               <div className="flex items-center gap-2 flex-wrap">
                 {a.nomClient && (
-                  <span className="text-xs font-semibold text-indigo-900">{a.nomClient}</span>
+                  <span className="flex items-center gap-1 text-xs font-semibold text-indigo-900">
+                    {a.nomClient}
+                    {a.auteurCertifie && <BadgeVendeurVerifie taille={11} variante="icone" />}
+                  </span>
                 )}
                 <Etoiles note={a.note} taille={13} />
                 <span className="text-xs text-indigo-900/40">

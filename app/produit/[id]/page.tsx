@@ -94,7 +94,7 @@ export default async function PageProduit({ params }: { params: { id: string } }
               <span className="block text-sm font-medium text-indigo-900 group-hover:underline">
                 {produit.vendeur.nomBoutique}
               </span>
-              {verifie && <BadgeVendeurVerifie />}
+              {verifie && <BadgeVendeurVerifie variante="icone" />}
             </span>
             <span className="flex items-center gap-2 flex-wrap text-xs text-indigo-900/50 mt-0.5">
               {produit.vendeur.ville && (

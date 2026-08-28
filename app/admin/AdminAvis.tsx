@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Star, Trash2 } from "lucide-react";
+import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
 
 type Avis = {
   id: string;
   note: number;
   commentaire: string | null;
   nomClient: string | null;
+  auteurCertifie?: boolean;
   createdAt: string;
   vendeur: { nomBoutique: string };
 };
@@ -77,6 +79,7 @@ export default function AdminAvis() {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-medium text-white">{a.nomClient || "Client anonyme"}</span>
+              {a.auteurCertifie && <BadgeVendeurVerifie taille={11} variante="icone" />}
               <Etoiles note={a.note} />
               <span className="text-xs text-neon-300/50">
                 {new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}

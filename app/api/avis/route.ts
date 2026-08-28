@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { idAppareil, lireIdAppareil, obtenirProfilAppareil } from "@/lib/appareil";
+import { lireSession } from "@/lib/auth";
+import { estVendeurVerifie } from "@/lib/abonnement";
 
 // GET /api/avis?vendeurId=xxx — liste des avis d'une boutique, moyenne, et
 // si CET appareil a déjà laissé un avis (pour afficher "Modifier mon avis"
@@ -26,10 +28,12 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/avis — crée ou met à jour l'avis de cet appareil pour une boutique.
-// Le pseudo affiché à côté du commentaire (voir /mon-profil) est toujours
-// celui du profil d'appareil courant — jamais une valeur envoyée librement
-// par le client — pour que le pseudo affiché soit fiable pour les autres
-// visiteurs et pour l'admin en cas de modération.
+// Le pseudo affiché à côté du commentaire (voir /mon-profil) est utilisé pour
+// un client anonyme — SAUF si l'auteur est connecté en tant que vendeur : un
+// vendeur peut aussi être client d'une autre boutique (on ne sait jamais), et
+// dans ce cas l'avis s'affiche toujours sous le nom de SA boutique plutôt que
+// sous un pseudo, certifiée ou non — seul le badge vérifié dépend, lui, de la
+// certification (voir Avis.auteurCertifie dans le schéma).
 export async function POST(req: NextRequest) {
   const appareilId = idAppareil();
   const { vendeurId, note, commentaire } = await req.json().catch(() => ({}));
@@ -38,17 +42,52 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ erreur: "Note invalide (1 à 5 requis)" }, { status: 400 });
   }
 
-  const profil = await obtenirProfilAppareil();
+  let nomClient = "";
+  let auteurVendeurId: string | null = null;
+  let auteurCertifie = false;
+
+  const session = lireSession();
+  if (session?.role === "VENDEUR") {
+    const monVendeur = await prisma.vendeur.findUnique({
+      where: { utilisateurId: session.id },
+      include: { abonnements: { orderBy: { createdAt: "desc" }, take: 1 } },
+    });
+
+    if (monVendeur?.id === vendeurId) {
+      return NextResponse.json({ erreur: "Vous ne pouvez pas noter votre propre boutique" }, { status: 400 });
+    }
+
+    // Toujours le nom de sa boutique (même non certifiée) plutôt qu'un
+    // pseudo anonyme — seul le badge dépend de la certification.
+    if (monVendeur) {
+      auteurVendeurId = monVendeur.id;
+      nomClient = monVendeur.nomBoutique;
+      auteurCertifie = estVendeurVerifie(monVendeur, monVendeur.abonnements[0]);
+    }
+  }
+
+  if (!auteurVendeurId) {
+    const profil = await obtenirProfilAppareil();
+    nomClient = profil.pseudo;
+  }
 
   const avis = await prisma.avis.upsert({
     where: { appareilId_vendeurId: { appareilId, vendeurId } },
-    update: { note, commentaire: commentaire?.slice(0, 300) || null, nomClient: profil.pseudo },
+    update: {
+      note,
+      commentaire: commentaire?.slice(0, 300) || null,
+      nomClient,
+      auteurVendeurId,
+      auteurCertifie,
+    },
     create: {
       appareilId,
       vendeurId,
       note,
       commentaire: commentaire?.slice(0, 300) || null,
-      nomClient: profil.pseudo,
+      nomClient,
+      auteurVendeurId,
+      auteurCertifie,
     },
   });
 
