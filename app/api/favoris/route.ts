@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { idAppareil } from "@/lib/appareil";
+import { estVendeurVerifie } from "@/lib/abonnement";
 
 const SELECTION_VENDEUR = {
-  select: { id: true, nomBoutique: true, utilisateur: { select: { whatsapp: true } } },
+  select: {
+    id: true,
+    nomBoutique: true,
+    certifie: true,
+    createdAt: true,
+    abonnements: { orderBy: { createdAt: "desc" }, take: 1, select: { statut: true } },
+    utilisateur: { select: { whatsapp: true } },
+  },
 } as const;
 
 // GET /api/favoris — favoris enregistrés pour CET appareil (cookie anonyme,
@@ -17,7 +25,16 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
     include: { produit: { include: { vendeur: SELECTION_VENDEUR } } },
   });
-  return NextResponse.json({ favoris });
+
+  const favorisAvecVerification = favoris.map((f) => ({
+    ...f,
+    produit: {
+      ...f.produit,
+      vendeur: { ...f.produit.vendeur, verifie: estVendeurVerifie(f.produit.vendeur, f.produit.vendeur.abonnements[0]) },
+    },
+  }));
+
+  return NextResponse.json({ favoris: favorisAvecVerification });
 }
 
 // POST /api/favoris — bascule le statut favori d'un produit pour cet

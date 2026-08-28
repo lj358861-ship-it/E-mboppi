@@ -6,6 +6,7 @@ import { Heart, MessageCircle, Volume2, VolumeX, Store, Percent, Star } from "lu
 import { lienContacterVendeur } from "@/lib/whatsapp";
 import { classesBadgeStock, labelStatutStock, StatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
 import { CATEGORIES } from "@/lib/categories";
+import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
 
 type Produit = {
   id: string;
@@ -19,7 +20,7 @@ type Produit = {
   categorie: string | null;
   noteMoyenne: number;
   nbAvis: number;
-  vendeur: { id: string; nomBoutique: string; utilisateur: { whatsapp: string } };
+  vendeur: { id: string; nomBoutique: string; verifie?: boolean; utilisateur: { whatsapp: string } };
 };
 
 type Filtre = "tous" | "promo" | "hot" | string;
@@ -170,6 +171,7 @@ export default function FeedVideosCourtes({ produits }: { produits: Produit[] })
               className="flex items-center gap-1.5 text-xs opacity-90 mb-1 w-fit hover:underline"
             >
               <Store size={13} /> {p.vendeur.nomBoutique}
+              {p.vendeur.verifie && <BadgeVendeurVerifie taille={11} />}
             </Link>
             <Link href={`/produit/${p.id}`}>
               <p className="font-medium text-base leading-snug line-clamp-2 mb-1.5">{p.titre}</p>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { idAppareil, lireIdAppareil } from "@/lib/appareil";
+import { estVendeurVerifie } from "@/lib/abonnement";
 
 const SELECTION_VENDEUR = {
   select: {
@@ -8,6 +9,9 @@ const SELECTION_VENDEUR = {
     nomBoutique: true,
     logoUrl: true,
     ville: true,
+    certifie: true,
+    createdAt: true,
+    abonnements: { orderBy: { createdAt: "desc" }, take: 1, select: { statut: true } },
     utilisateur: { select: { whatsapp: true } },
   },
 } as const;
@@ -44,10 +48,17 @@ export async function GET() {
   ]);
 
   const idsFavoris = new Set(favoris.map((f) => f.produitId));
-  const produitsAvecFavoris = produits.map((p) => ({ ...p, estFavori: idsFavoris.has(p.id) }));
+  const produitsAvecFavoris = produits.map((p) => ({
+    ...p,
+    estFavori: idsFavoris.has(p.id),
+    vendeur: { ...p.vendeur, verifie: estVendeurVerifie(p.vendeur, p.vendeur.abonnements[0]) },
+  }));
 
   return NextResponse.json({
-    vendeurs: suivis.map((s) => s.vendeur),
+    vendeurs: suivis.map((s) => ({
+      ...s.vendeur,
+      verifie: estVendeurVerifie(s.vendeur, s.vendeur.abonnements[0]),
+    })),
     produits: produitsAvecFavoris,
   });
 }

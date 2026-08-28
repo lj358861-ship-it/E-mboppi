@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Heart, MessageCircle, Flame, MapPin, Percent } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
 import { classesBadgeStock, labelStatutStock, StatutStock, CLASSES_BADGE_PROMO, LABEL_BADGE_PROMO } from "@/lib/stock";
+import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
 
 type Props = {
   id: string;
@@ -18,6 +19,8 @@ type Props = {
   nomBoutique: string;
   villeVendeur?: string | null;
   whatsappVendeur: string;
+  /** Vendeur certifié ou abonnement actif depuis plus de 2 mois — voir lib/abonnement.ts */
+  verifie?: boolean;
   estFavori?: boolean;
   statutStock?: StatutStock;
   /** "Hot Sales" — mise en avant payante, décidée uniquement par l'admin (champ `boost`) */
@@ -38,6 +41,7 @@ export default function CarteProduitVideo({
   nomBoutique,
   villeVendeur,
   whatsappVendeur,
+  verifie = false,
   estFavori = false,
   statutStock = "DISPONIBLE",
   hotSales = false,
@@ -133,6 +137,7 @@ export default function CarteProduitVideo({
           className="flex items-center gap-1 text-xs opacity-80 mb-0.5 hover:underline hover:opacity-100 w-fit"
         >
           {nomBoutique}
+          {verifie && <BadgeVendeurVerifie taille={11} />}
           {villeVendeur && (
             <span className="flex items-center gap-0.5 opacity-70 font-normal">
               <MapPin size={10} /> {villeVendeur}

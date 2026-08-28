@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { classerParPertinence } from "@/lib/fuzzy";
+import { estVendeurVerifie } from "@/lib/abonnement";
 
 // GET /api/vendeurs/recherche?q=nom+de+boutique
 // Endpoint public utilisé par l'onglet "Vendeurs" de la recherche.
@@ -17,8 +18,17 @@ export async function GET(req: NextRequest) {
     nomBoutique: true,
     logoUrl: true,
     ville: true,
+    certifie: true,
+    createdAt: true,
+    abonnements: { orderBy: { createdAt: "desc" as const }, take: 1, select: { statut: true } },
     _count: { select: { produits: { where: { visible: true } } } },
   } as const;
+
+  type VendeurAvecVerification = { certifie?: boolean; createdAt: Date; abonnements: { statut: string }[] };
+
+  function avecVerification<T extends VendeurAvecVerification>(vendeurs: T[]) {
+    return vendeurs.map((v) => ({ ...v, verifie: estVendeurVerifie(v, v.abonnements[0]) }));
+  }
 
   if (!q) {
     const vendeurs = await prisma.vendeur.findMany({
@@ -27,7 +37,7 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
       take: 30,
     });
-    return NextResponse.json({ vendeurs });
+    return NextResponse.json({ vendeurs: avecVerification(vendeurs) });
   }
 
   // Passe 1 : correspondance stricte
@@ -37,7 +47,7 @@ export async function GET(req: NextRequest) {
     take: 30,
   });
   if (stricts.length > 0) {
-    return NextResponse.json({ vendeurs: stricts });
+    return NextResponse.json({ vendeurs: avecVerification(stricts) });
   }
 
   // Passe 2 : tolérance aux fautes de frappe
@@ -46,7 +56,10 @@ export async function GET(req: NextRequest) {
     select: selection,
     take: 300,
   });
-  const classes = classerParPertinence(q, candidats, (v) => `${v.nomBoutique} ${v.ville || ""}`).slice(0, 30);
+  const classes = classerParPertinence<(typeof candidats)[number]>(q, candidats, (v) => `${v.nomBoutique} ${v.ville || ""}`).slice(
+    0,
+    30
+  );
 
-  return NextResponse.json({ vendeurs: classes });
+  return NextResponse.json({ vendeurs: avecVerification(classes) });
 }

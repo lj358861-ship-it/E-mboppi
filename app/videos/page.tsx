@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import FeedVideosCourtes from "@/components/FeedVideosCourtes";
 import { notesMoyennesBoutiques } from "@/lib/notes";
+import { estVendeurVerifie } from "@/lib/abonnement";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,18 @@ export const metadata = {
 async function recupererProduitsVideo() {
   const produits = await prisma.produit.findMany({
     where: { visible: true, videoUrl: { not: null } },
-    include: { vendeur: { select: { id: true, nomBoutique: true, utilisateur: { select: { whatsapp: true } } } } },
+    include: {
+      vendeur: {
+        select: {
+          id: true,
+          nomBoutique: true,
+          certifie: true,
+          createdAt: true,
+          abonnements: { orderBy: { createdAt: "desc" }, take: 1, select: { statut: true } },
+          utilisateur: { select: { whatsapp: true } },
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
     take: 100,
   });
@@ -24,7 +36,12 @@ async function recupererProduitsVideo() {
 
   return produits.map((p) => {
     const stats = notes.get(p.vendeur.id) ?? { noteMoyenne: 0, nbAvis: 0 };
-    return { ...p, noteMoyenne: stats.noteMoyenne, nbAvis: stats.nbAvis };
+    return {
+      ...p,
+      noteMoyenne: stats.noteMoyenne,
+      nbAvis: stats.nbAvis,
+      vendeur: { ...p.vendeur, verifie: estVendeurVerifie(p.vendeur, p.vendeur.abonnements[0]) },
+    };
   });
 }
 

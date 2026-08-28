@@ -205,6 +205,7 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
               nomBoutique={vendeur.nomBoutique}
               villeVendeur={vendeur.ville}
               whatsappVendeur={vendeur.utilisateur.whatsapp}
+              verifie={verifie}
               statutStock={p.statutStock}
               hotSales={p.boost}
               enPromotion={p.enPromo}

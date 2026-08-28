@@ -15,7 +15,7 @@ type Favori = {
     statutStock: StatutStock;
     boost: boolean;
     enPromo: boolean;
-    vendeur: { id: string; nomBoutique: string; utilisateur?: { whatsapp: string } };
+    vendeur: { id: string; nomBoutique: string; verifie?: boolean; utilisateur?: { whatsapp: string } };
   };
 };
 
@@ -55,6 +55,7 @@ export default function Favoris() {
             vendeurId={produit.vendeur.id}
             nomBoutique={produit.vendeur.nomBoutique}
             whatsappVendeur={produit.vendeur.utilisateur?.whatsapp || ""}
+            verifie={produit.vendeur.verifie}
             statutStock={produit.statutStock}
             hotSales={produit.boost}
             enPromotion={produit.enPromo}

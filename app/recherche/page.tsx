@@ -20,6 +20,7 @@ import {
   ArrowDownUp,
 } from "lucide-react";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
+import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
 import { CATEGORIES, sousCategoriesPour } from "@/lib/categories";
 import { StatutStock } from "@/lib/stock";
 
@@ -33,7 +34,14 @@ type Produit = {
   boost: boolean;
   enPromo: boolean;
   estFavori?: boolean;
-  vendeur: { id: string; nomBoutique: string; logoUrl: string | null; ville: string | null; utilisateur: { whatsapp: string } };
+  vendeur: {
+    id: string;
+    nomBoutique: string;
+    logoUrl: string | null;
+    ville: string | null;
+    verifie?: boolean;
+    utilisateur: { whatsapp: string };
+  };
 };
 
 type VendeurResultat = {
@@ -41,6 +49,7 @@ type VendeurResultat = {
   nomBoutique: string;
   logoUrl: string | null;
   ville: string | null;
+  verifie?: boolean;
   _count: { produits: number };
 };
 
@@ -456,7 +465,10 @@ function RechercheContenu() {
                   )}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-indigo-900 line-clamp-1">{v.nomBoutique}</p>
+                  <p className="flex items-center justify-center gap-1 text-sm font-medium text-indigo-900 line-clamp-1">
+                    <span className="truncate">{v.nomBoutique}</span>
+                    {v.verifie && <BadgeVendeurVerifie taille={12} />}
+                  </p>
                   {v.ville && <p className="text-xs text-indigo-900/50">{v.ville}</p>}
                   <p className="text-[11px] text-indigo-900/40 mt-0.5">
                     {v._count.produits} article{v._count.produits > 1 ? "s" : ""}

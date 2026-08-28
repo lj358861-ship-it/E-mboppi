@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Store } from "lucide-react";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
+import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
 import { StatutStock } from "@/lib/stock";
 
 type ProduitSuivi = {
@@ -17,10 +18,10 @@ type ProduitSuivi = {
   boost: boolean;
   enPromo: boolean;
   estFavori?: boolean;
-  vendeur: { id: string; nomBoutique: string; ville: string | null; utilisateur: { whatsapp: string } };
+  vendeur: { id: string; nomBoutique: string; ville: string | null; verifie?: boolean; utilisateur: { whatsapp: string } };
 };
 
-type VendeurSuivi = { id: string; nomBoutique: string; logoUrl: string | null };
+type VendeurSuivi = { id: string; nomBoutique: string; logoUrl: string | null; verifie?: boolean };
 
 /**
  * Section prioritaire de l'accueil : les articles récents des boutiques que
@@ -73,6 +74,7 @@ export default function ProduitsSuivis() {
                 nomBoutique={p.vendeur.nomBoutique}
                 villeVendeur={p.vendeur.ville}
                 whatsappVendeur={p.vendeur.utilisateur.whatsapp}
+                verifie={p.vendeur.verifie}
                 statutStock={p.statutStock}
                 hotSales={p.boost}
                 enPromotion={p.enPromo}
@@ -98,6 +100,7 @@ export default function ProduitsSuivis() {
               )}
             </span>
             {v.nomBoutique}
+            {v.verifie && <BadgeVendeurVerifie taille={11} />}
           </Link>
         ))}
       </div>

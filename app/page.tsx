@@ -7,11 +7,20 @@ import ProduitsSuivis from "@/components/ProduitsSuivis";
 import IntroLogo from "@/components/IntroLogo";
 import Link from "next/link";
 import { Store, Flame } from "lucide-react";
+import { estVendeurVerifie } from "@/lib/abonnement";
 
 export const dynamic = "force-dynamic";
 
 const SELECTION_VENDEUR = {
-  select: { id: true, nomBoutique: true, ville: true, utilisateur: { select: { whatsapp: true } } },
+  select: {
+    id: true,
+    nomBoutique: true,
+    ville: true,
+    certifie: true,
+    createdAt: true,
+    abonnements: { orderBy: { createdAt: "desc" }, take: 1, select: { statut: true } },
+    utilisateur: { select: { whatsapp: true } },
+  },
 } as const;
 
 async function idsFavoris(produitIds: string[]): Promise<Set<string>> {
@@ -129,6 +138,7 @@ export default async function Accueil() {
                   hotSales={p.boost}
                   enPromotion={p.enPromo}
                   estFavori={favoris.has(p.id)}
+                  verifie={estVendeurVerifie(p.vendeur, p.vendeur.abonnements[0])}
                   enFeu
                 />
               </div>
@@ -180,6 +190,7 @@ export default async function Accueil() {
                   hotSales={p.boost}
                   enPromotion={p.enPromo}
                   estFavori={favoris.has(p.id)}
+                  verifie={estVendeurVerifie(p.vendeur, p.vendeur.abonnements[0])}
                 />
               </div>
             ))}

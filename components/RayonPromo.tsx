@@ -17,7 +17,7 @@ type ProduitPromo = {
   boost: boolean;
   enPromo: boolean;
   estFavori?: boolean;
-  vendeur: { id: string; nomBoutique: string; ville: string | null; utilisateur: { whatsapp: string } };
+  vendeur: { id: string; nomBoutique: string; ville: string | null; verifie?: boolean; utilisateur: { whatsapp: string } };
 };
 
 /**
@@ -94,6 +94,7 @@ export default function RayonPromo() {
               nomBoutique={p.vendeur.nomBoutique}
               villeVendeur={p.vendeur.ville}
               whatsappVendeur={p.vendeur.utilisateur.whatsapp}
+              verifie={p.vendeur.verifie}
               statutStock={p.statutStock}
               hotSales={p.boost}
               enPromotion={p.enPromo}

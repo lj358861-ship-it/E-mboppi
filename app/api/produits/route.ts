@@ -6,6 +6,7 @@ import { PHOTOS_MAX_PAR_ARTICLE } from "@/lib/media-limits";
 import { classerParPertinenceMulti } from "@/lib/fuzzy";
 import { elargirTermeRecherche, inferCategorieDepuisTerme } from "@/lib/synonymes";
 import { enregistrerRecherche, notifierSuiviNouveauProduit, notifierRecherchePromo } from "@/lib/notifications";
+import { estVendeurVerifie } from "@/lib/abonnement";
 
 const SELECTION_VENDEUR = {
   select: {
@@ -13,26 +14,36 @@ const SELECTION_VENDEUR = {
     nomBoutique: true,
     logoUrl: true,
     ville: true,
+    certifie: true,
+    createdAt: true,
+    abonnements: { orderBy: { createdAt: "desc" }, take: 1, select: { statut: true } },
     utilisateur: { select: { whatsapp: true } },
   },
 } as const;
 
 /**
- * Annote chaque produit avec `estFavori` pour l'appareil courant, pour que
- * le cœur s'affiche déjà rempli partout (accueil, recherche, boutique) sans
- * que le client ait besoin de re-marquer un article déjà mis en favori.
+ * Annote chaque produit avec `estFavori` (pour l'appareil courant) et
+ * `vendeur.verifie` (badge "Vendeur vérifié") — factorisé ici car ce module
+ * a plusieurs points de retour (correspondance stricte, classement
+ * approximatif, suggestions de secours) qui partagent tous cette étape.
  */
-async function avecFavoris<T extends { id: string }>(produits: T[]): Promise<(T & { estFavori: boolean })[]> {
+async function annoterProduits<
+  T extends { id: string; vendeur: { certifie?: boolean; createdAt: Date; abonnements: { statut: string }[] } }
+>(produits: T[]): Promise<(T & { estFavori: boolean; vendeur: T["vendeur"] & { verifie: boolean } })[]> {
   const appareilId = lireIdAppareil();
-  if (!appareilId || produits.length === 0) {
-    return produits.map((p) => ({ ...p, estFavori: false }));
+  const idsFavoris = new Set<string>();
+  if (appareilId && produits.length > 0) {
+    const favoris = await prisma.favori.findMany({
+      where: { appareilId, produitId: { in: produits.map((p) => p.id) } },
+      select: { produitId: true },
+    });
+    favoris.forEach((f) => idsFavoris.add(f.produitId));
   }
-  const favoris = await prisma.favori.findMany({
-    where: { appareilId, produitId: { in: produits.map((p) => p.id) } },
-    select: { produitId: true },
-  });
-  const idsFavoris = new Set(favoris.map((f) => f.produitId));
-  return produits.map((p) => ({ ...p, estFavori: idsFavoris.has(p.id) }));
+  return produits.map((p) => ({
+    ...p,
+    estFavori: idsFavoris.has(p.id),
+    vendeur: { ...p.vendeur, verifie: estVendeurVerifie(p.vendeur, p.vendeur.abonnements[0]) },
+  }));
 }
 
 // GET /api/produits?q=chaussures&categorie=mode&nature=Homme&type=photo|video|hot&prixMin=1000&prixMax=5000
@@ -116,7 +127,7 @@ export async function GET(req: NextRequest) {
       take: TAILLE_PAGE + 1,
     });
     const hasMore = produits.length > TAILLE_PAGE;
-    return NextResponse.json({ produits: await avecFavoris(produits.slice(0, TAILLE_PAGE)), hasMore });
+    return NextResponse.json({ produits: await annoterProduits(produits.slice(0, TAILLE_PAGE)), hasMore });
   }
 
   // --- Passe 1 : correspondance stricte, élargie au champ lexical ---
@@ -143,7 +154,7 @@ export async function GET(req: NextRequest) {
   if (correspondanceStricte.length > 0) {
     const hasMore = correspondanceStricte.length > TAILLE_PAGE;
     return NextResponse.json({
-      produits: await avecFavoris(correspondanceStricte.slice(0, TAILLE_PAGE)),
+      produits: await annoterProduits(correspondanceStricte.slice(0, TAILLE_PAGE)),
       hasMore,
     });
   }
@@ -159,7 +170,7 @@ export async function GET(req: NextRequest) {
     take: 500,
   });
 
-  let classes = classerParPertinenceMulti(termesElargis, candidats, (p) =>
+  let classes = classerParPertinenceMulti<(typeof candidats)[number]>(termesElargis, candidats, (p) =>
     [p.titre, p.nature || "", p.categorie || "", p.vendeur.nomBoutique].join(" ")
   );
 
@@ -170,7 +181,7 @@ export async function GET(req: NextRequest) {
   if (classes.length > 0) {
     const page = classes.slice(skip, skip + TAILLE_PAGE);
     const hasMore = classes.length > skip + TAILLE_PAGE;
-    return NextResponse.json({ produits: await avecFavoris(page), hasMore });
+    return NextResponse.json({ produits: await annoterProduits(page), hasMore });
   }
 
   // --- Passe 3 : filet de sécurité — vraiment aucune correspondance, même
@@ -218,7 +229,7 @@ export async function GET(req: NextRequest) {
       : suggestions;
 
   return NextResponse.json({
-    produits: await avecFavoris(suggestionsFinales),
+    produits: await annoterProduits(suggestionsFinales),
     hasMore: false,
     suggestionsFallback: true,
   });
