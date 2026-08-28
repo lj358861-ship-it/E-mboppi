@@ -12,7 +12,7 @@ async function recupererProduitsVideo() {
     where: { visible: true, videoUrl: { not: null } },
     include: { vendeur: { select: { id: true, nomBoutique: true, utilisateur: { select: { whatsapp: true } } } } },
     orderBy: { createdAt: "desc" },
-    take: 40,
+    take: 100,
   });
 }
 

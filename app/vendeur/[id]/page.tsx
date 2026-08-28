@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import { MapPin, MessageCircle, Store, Tag, Heart, CalendarDays, Star } from "lucide-react";
 import { lienContacterVendeur } from "@/lib/whatsapp";
 import { estVendeurVerifie } from "@/lib/abonnement";
+import { noteMoyenneBoutique } from "@/lib/notes";
 import CarteProduitVideo from "@/components/CarteProduitVideo";
 import BoutonSuivreBoutique from "@/components/BoutonSuivreBoutique";
 import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
@@ -72,15 +73,18 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
         )
       : new Set<string>();
 
-  const [suiviExistant, nbSuivis, statsAvis] = await Promise.all([
+  const [suiviExistant, nbSuivis, statsProduits] = await Promise.all([
     appareilId
       ? prisma.suivi.findUnique({ where: { appareilId_vendeurId: { appareilId, vendeurId: vendeur.id } } })
       : null,
     prisma.suivi.count({ where: { vendeurId: vendeur.id } }),
-    prisma.avis.aggregate({ where: { vendeurId: vendeur.id }, _avg: { note: true }, _count: true }),
+    noteMoyenneBoutique(vendeur.id),
   ]);
-  const noteMoyenne = statsAvis._avg.note || 0;
-  const nbAvis = statsAvis._count;
+  // La note affichée sur le profil boutique est la moyenne des avis de tous
+  // ses produits (voir lib/notes.ts) — les avis textuels ci-dessous
+  // (AvisBoutique) restent un espace de commentaires séparé.
+  const noteMoyenne = statsProduits.noteMoyenne;
+  const nbAvis = statsProduits.nbAvis;
 
   const verifie = estVendeurVerifie(vendeur, vendeur.abonnements[0]);
   const urlBoutique = `${process.env.NEXT_PUBLIC_SITE_URL || "https://e-mboppi-production.up.railway.app"}/vendeur/${vendeur.id}`;
@@ -91,9 +95,20 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
     <div className="max-w-5xl mx-auto px-4 md:px-8 py-6">
       {/* Carte boutique — bannière dégradée aux couleurs du site + infos */}
       <div className="relative rounded-3xl overflow-hidden bg-white border border-stone-200 shadow-sm mb-8">
-        <div className="h-16 sm:h-20 bg-gradient-to-r from-feuille-600 to-feuille-500 relative overflow-hidden">
-          <div className="absolute inset-0 bg-black/5" />
-          <div className="absolute -right-6 -top-10 w-32 h-32 rounded-full bg-white/10" />
+        <div className="h-28 sm:h-36 relative overflow-hidden bg-gradient-to-r from-feuille-600 to-feuille-500">
+          {vendeur.photoCouvertureUrl ? (
+            <Image
+              src={vendeur.photoCouvertureUrl}
+              alt=""
+              fill
+              sizes="(min-width: 1024px) 1024px, 100vw"
+              className="object-cover"
+              priority
+            />
+          ) : (
+            <div className="absolute -right-6 -top-10 w-32 h-32 rounded-full bg-white/10" />
+          )}
+          <div className="absolute inset-0 bg-black/10" />
         </div>
 
         <div className="px-5 sm:px-8 pb-6">
@@ -194,6 +209,8 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
               hotSales={p.boost}
               enPromotion={p.enPromo}
               estFavori={favoris.has(p.id)}
+              noteMoyenne={p.noteMoyenne}
+              nbAvis={p.nbAvis}
             />
           ))}
         </div>

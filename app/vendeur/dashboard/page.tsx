@@ -40,7 +40,7 @@ export default async function DashboardVendeur() {
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2 flex-wrap">
           <h1 className="font-display text-2xl font-semibold text-indigo-900">{vendeur.nomBoutique}</h1>
-          {verifie && <BadgeVendeurVerifie taille={13} />}
+          {verifie && <BadgeVendeurVerifie taille={13} variante="texte" />}
         </div>
         <div className="flex items-center gap-4">
           <ActiverNotifications clePubliqueVapid={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null} />
@@ -140,6 +140,7 @@ export default async function DashboardVendeur() {
           description={vendeur.description}
           ville={vendeur.ville}
           logoUrl={vendeur.logoUrl}
+          photoCouvertureUrl={vendeur.photoCouvertureUrl}
         />
       </div>
 

@@ -77,6 +77,20 @@ export default async function Accueil() {
         <PromoCarousel />
       </section>
 
+      {/* Point d'entrée vers l'annuaire des boutiques */}
+      <div className="px-4 md:px-8 mb-6">
+        <Link
+          href="/boutiques"
+          className="flex items-center justify-between gap-3 bg-indigo-950 rounded-2xl px-5 py-4 relative overflow-hidden"
+        >
+          <div className="neon-blob bg-neon-600 w-40 h-40 -top-16 -right-10 opacity-30" />
+          <span className="relative flex items-center gap-2 text-sm font-semibold text-white">
+            <Store size={16} className="text-neon-400" /> Visitez les boutiques du marché
+          </span>
+          <span className="relative text-xs font-medium text-white/70">Voir tout →</span>
+        </Link>
+      </div>
+
       {/* Articles des boutiques suivies — priorité sur le reste du fil, ne
           s'affiche que si le client suit au moins une boutique */}
       <ProduitsSuivis />
@@ -116,6 +130,8 @@ export default async function Accueil() {
                   enPromotion={p.enPromo}
                   estFavori={favoris.has(p.id)}
                   enFeu
+                  noteMoyenne={p.noteMoyenne}
+                  nbAvis={p.nbAvis}
                 />
               </div>
             ))}
@@ -166,6 +182,8 @@ export default async function Accueil() {
                   hotSales={p.boost}
                   enPromotion={p.enPromo}
                   estFavori={favoris.has(p.id)}
+                  noteMoyenne={p.noteMoyenne}
+                  nbAvis={p.nbAvis}
                 />
               </div>
             ))}

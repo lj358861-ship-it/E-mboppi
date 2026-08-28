@@ -35,7 +35,7 @@ export default async function ProfilVendeur() {
     <div className="px-4 md:px-8 py-6 max-w-lg mx-auto">
       <div className="flex items-center gap-2 flex-wrap mb-1">
         <h1 className="font-display text-2xl font-semibold text-indigo-900">Mon profil</h1>
-        {verifie && <BadgeVendeurVerifie taille={13} />}
+        {verifie && <BadgeVendeurVerifie taille={13} variante="texte" />}
       </div>
       <p className="text-sm text-indigo-900/60 mb-6">
         Connecté en tant que <strong>{vendeur.utilisateur.nom}</strong> ({vendeur.utilisateur.telephone})
@@ -63,6 +63,7 @@ export default async function ProfilVendeur() {
         description={vendeur.description}
         ville={vendeur.ville}
         logoUrl={vendeur.logoUrl}
+        photoCouvertureUrl={vendeur.photoCouvertureUrl}
       />
 
       <p className="text-xs text-indigo-900/40 mt-6">

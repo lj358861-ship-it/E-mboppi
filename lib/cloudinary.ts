@@ -23,6 +23,7 @@ cloudinary.config({
 export const DOSSIER_PHOTOS = "e-mboppi/produits/photos";
 export const DOSSIER_VIDEOS = "e-mboppi/produits/videos";
 export const DOSSIER_LOGOS = "e-mboppi/vendeurs/logos";
+export const DOSSIER_COUVERTURES = "e-mboppi/vendeurs/couvertures";
 
 // Limites partagées avec les composants client (voir lib/media-limits.ts)
 export {

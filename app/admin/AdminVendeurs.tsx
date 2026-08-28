@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Clock, XCircle, Trash2, Phone } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, Trash2, Phone, BadgeCheck } from "lucide-react";
 
 type Vendeur = {
   id: string;
@@ -9,6 +9,7 @@ type Vendeur = {
   nom: string;
   telephone: string;
   whatsapp: string;
+  certifie: boolean;
   abonnementId: string | null;
   statutAbonnement: string;
   joursRestants: number;
@@ -42,6 +43,19 @@ export default function AdminVendeurs({ onChangement }: { onChangement: () => vo
     onChangement();
   }
 
+  async function basculerCertification(vendeur: Vendeur) {
+    setEnCours(`certif-${vendeur.id}`);
+    setVendeurs((liste) =>
+      liste ? liste.map((v) => (v.id === vendeur.id ? { ...v, certifie: !v.certifie } : v)) : liste
+    );
+    await fetch(`/api/vendeurs/${vendeur.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ certifie: !vendeur.certifie }),
+    });
+    setEnCours(null);
+  }
+
   async function supprimer(vendeur: Vendeur) {
     if (!confirm(`Supprimer définitivement "${vendeur.nomBoutique}" et toutes ses annonces ? Cette action est irréversible.`)) {
       return;
@@ -71,6 +85,19 @@ export default function AdminVendeurs({ onChangement }: { onChangement: () => vo
 
           <div className="flex items-center gap-2 flex-wrap">
             <StatutBadge statut={v.statutAbonnement} jours={v.joursRestants} />
+            <button
+              onClick={() => basculerCertification(v)}
+              disabled={enCours === `certif-${v.id}`}
+              title="Certification manuelle (autocollant bleu)"
+              className={`flex items-center gap-1 text-xs px-3 py-2 rounded-full font-medium disabled:opacity-60 transition-colors ${
+                v.certifie
+                  ? "bg-blue-500 text-white"
+                  : "bg-white/5 neon-border text-neon-300/70 hover:text-white"
+              }`}
+            >
+              <BadgeCheck size={12} className={v.certifie ? "fill-white text-blue-500" : ""} />
+              {v.certifie ? "Certifié" : "Certifier"}
+            </button>
             {v.statutAbonnement !== "ACTIF" && v.abonnementId && (
               <button
                 onClick={() => valider(v.abonnementId!)}

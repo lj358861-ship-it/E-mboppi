@@ -3,25 +3,30 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Loader2, Store } from "lucide-react";
+import { Loader2, Store, Image as ImageIcon } from "lucide-react";
 
 export default function ProfilBoutique({
   nomBoutique,
   description,
   ville,
   logoUrl,
+  photoCouvertureUrl,
 }: {
   nomBoutique: string;
   description: string | null;
   ville: string | null;
   logoUrl: string | null;
+  photoCouvertureUrl: string | null;
 }) {
   const [form, setForm] = useState({ description: description || "", ville: ville || "" });
   const [logo, setLogo] = useState(logoUrl);
+  const [couverture, setCouverture] = useState(photoCouvertureUrl);
   const [envoiLogo, setEnvoiLogo] = useState(false);
+  const [envoiCouverture, setEnvoiCouverture] = useState(false);
   const [enregistrement, setEnregistrement] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const inputCouvertureRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   async function changerLogo(fichiers: FileList | null) {
@@ -50,6 +55,32 @@ export default function ProfilBoutique({
     }
   }
 
+  async function changerCouverture(fichiers: FileList | null) {
+    const fichier = fichiers?.[0];
+    if (!fichier) return;
+    setEnvoiCouverture(true);
+    try {
+      const donnees = new FormData();
+      donnees.append("fichier", fichier);
+      donnees.append("type", "couverture");
+      const res = await fetch("/api/upload", { method: "POST", body: donnees });
+      const resultat = await res.json();
+      if (!res.ok) throw new Error(resultat.erreur);
+
+      await fetch("/api/vendeurs", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoCouvertureUrl: resultat.url, photoCouverturePublicId: resultat.publicId }),
+      });
+      setCouverture(resultat.url);
+      router.refresh();
+    } catch {
+      setMessage("Échec de l'envoi de la photo de couverture.");
+    } finally {
+      setEnvoiCouverture(false);
+    }
+  }
+
   async function enregistrerInfos(e: React.FormEvent) {
     e.preventDefault();
     setEnregistrement(true);
@@ -67,6 +98,35 @@ export default function ProfilBoutique({
   return (
     <div className="bg-white border border-stone-200 rounded-2xl p-5">
       <p className="font-display text-lg font-semibold text-indigo-900 mb-4">Profil de la boutique</p>
+
+      {/* Photo de couverture — bannière derrière le logo sur le profil public */}
+      <button
+        type="button"
+        onClick={() => inputCouvertureRef.current?.click()}
+        disabled={envoiCouverture}
+        className="relative w-full h-28 rounded-xl overflow-hidden bg-gradient-to-r from-feuille-600 to-feuille-500 mb-2 flex items-center justify-center"
+      >
+        {envoiCouverture ? (
+          <Loader2 size={20} className="animate-spin text-white" />
+        ) : couverture ? (
+          <Image src={couverture} alt="" fill sizes="400px" className="object-cover" />
+        ) : (
+          <span className="flex items-center gap-1.5 text-xs font-medium text-white/90">
+            <ImageIcon size={14} /> Ajouter une photo de couverture
+          </span>
+        )}
+        <span className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] font-medium px-2 py-1 rounded-full">
+          Changer la couverture
+        </span>
+        <input
+          ref={inputCouvertureRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => changerCouverture(e.target.files)}
+        />
+      </button>
+
       <div className="flex items-center gap-4 mb-5">
         <button
           type="button"

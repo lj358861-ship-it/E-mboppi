@@ -5,6 +5,7 @@ import {
   DOSSIER_PHOTOS,
   DOSSIER_VIDEOS,
   DOSSIER_LOGOS,
+  DOSSIER_COUVERTURES,
   PHOTO_TAILLE_MAX_OCTETS,
   VIDEO_TAILLE_MAX_OCTETS,
 } from "@/lib/cloudinary";
@@ -12,11 +13,12 @@ import {
 // Nécessaire pour manipuler des Buffer et parler à Cloudinary
 export const runtime = "nodejs";
 
-type TypeFichier = "photo" | "video" | "logo";
+type TypeFichier = "photo" | "video" | "logo" | "couverture";
 
 const CONFIG: Record<TypeFichier, { dossier: string; resourceType: "image" | "video"; tailleMax: number }> = {
   photo: { dossier: DOSSIER_PHOTOS, resourceType: "image", tailleMax: PHOTO_TAILLE_MAX_OCTETS },
   logo: { dossier: DOSSIER_LOGOS, resourceType: "image", tailleMax: PHOTO_TAILLE_MAX_OCTETS },
+  couverture: { dossier: DOSSIER_COUVERTURES, resourceType: "image", tailleMax: PHOTO_TAILLE_MAX_OCTETS },
   video: { dossier: DOSSIER_VIDEOS, resourceType: "video", tailleMax: VIDEO_TAILLE_MAX_OCTETS },
 };
 
