@@ -47,9 +47,11 @@ function Etoiles({
 }
 
 /**
- * Avis clients sur un article précis (par opposition à AvisBoutique, qui
- * note la boutique dans son ensemble) — affiché sur la fiche produit.
- * Même logique appareil anonyme : pas besoin de compte pour noter.
+ * Avis clients sur un article précis — affiché sur la fiche produit. Même
+ * logique appareil anonyme : pas besoin de compte pour noter. C'est le SEUL
+ * endroit où un client peut laisser une note : il n'existe pas de formulaire
+ * pour noter une boutique directement, sa note globale (voir
+ * components/AvisRecentsBoutique.tsx) est calculée à partir de ces avis.
  */
 export default function AvisProduit({ produitId }: { produitId: string }) {
   const [avis, setAvis] = useState<Avis[]>([]);

@@ -11,7 +11,7 @@ import CarteProduitVideo from "@/components/CarteProduitVideo";
 import BoutonSuivreBoutique from "@/components/BoutonSuivreBoutique";
 import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
 import BoutonPartager from "@/components/BoutonPartager";
-import AvisBoutique from "@/components/AvisBoutique";
+import AvisRecentsBoutique from "@/components/AvisRecentsBoutique";
 
 export const dynamic = "force-dynamic";
 
@@ -81,8 +81,9 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
     noteMoyenneBoutique(vendeur.id),
   ]);
   // La note affichée sur le profil boutique est la moyenne des avis de tous
-  // ses produits (voir lib/notes.ts) — les avis textuels ci-dessous
-  // (AvisBoutique) restent un espace de commentaires séparé.
+  // ses produits (voir lib/notes.ts) — on ne peut pas noter la boutique
+  // elle-même, seulement ses articles. AvisRecentsBoutique (plus bas) se
+  // contente d'afficher ces mêmes avis en lecture seule.
   const noteMoyenne = statsProduits.noteMoyenne;
   const nbAvis = statsProduits.nbAvis;
 
@@ -215,7 +216,7 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
         </div>
       )}
 
-      <AvisBoutique vendeurId={vendeur.id} />
+      <AvisRecentsBoutique vendeurId={vendeur.id} />
     </div>
   );
 }

@@ -201,11 +201,15 @@ model Suivi {
   @@index([vendeurId])
 }
 
-// Avis client sur une boutique — étoiles + commentaire court. Sur un
-// marché où l'identité n'est pas vérifiée par pièce, c'est le signal de
-// confiance le plus simple avant de contacter un vendeur inconnu.
-// Un seul avis par appareil et par boutique (anonyme, pas besoin de compte,
-// même logique que Favori/Suivi).
+// LEGACY — une boutique ne peut plus être notée directement : il n'existe
+// plus de formulaire client pour créer un Avis (voir components/
+// AvisRecentsBoutique.tsx et AvisProduit.tsx). La note affichée sur une page
+// boutique est désormais calculée uniquement à partir des avis sur SES
+// articles (model AvisProduit, voir lib/notes.ts::noteMoyenneBoutique). Ce
+// modèle et la route /api/avis restent en place pour ne pas casser les
+// enregistrements déjà en base et pour que l'admin puisse encore les
+// modérer/supprimer (app/admin/AdminAvis.tsx) — plus aucune nouvelle entrée
+// n'est créée depuis l'app.
 model Avis {
   id          String   @id @default(cuid())
   vendeurId   String
