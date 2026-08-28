@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
-import { Store, Heart } from "lucide-react";
+import { Store, Heart, Star } from "lucide-react";
 import { estVendeurVerifie } from "@/lib/abonnement";
+import { notesMoyennesBoutiques } from "@/lib/notes";
 import BadgeVendeurVerifie from "@/components/BadgeVendeurVerifie";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,11 @@ export default async function Boutiques() {
     orderBy: [{ certifie: "desc" }, { createdAt: "desc" }],
   });
 
+  // Note de chaque boutique = moyenne des avis de ses articles (voir
+  // lib/notes.ts) — calculée en une seule requête groupée pour tout
+  // l'annuaire plutôt qu'un aller-retour base par carte.
+  const notes = await notesMoyennesBoutiques(vendeurs.map((v) => v.id));
+
   return (
     <div className="max-w-5xl mx-auto px-4 md:px-8 py-6">
       <div className="mb-6">
@@ -41,6 +47,7 @@ export default async function Boutiques() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {vendeurs.map((v) => {
             const verifie = estVendeurVerifie(v, v.abonnements[0]);
+            const stats = notes.get(v.id) ?? { noteMoyenne: 0, nbAvis: 0 };
             return (
               <Link
                 key={v.id}
@@ -63,12 +70,19 @@ export default async function Boutiques() {
                   </div>
                   <p className="flex items-center gap-1 text-sm font-semibold text-indigo-900 truncate">
                     <span className="truncate">{v.nomBoutique}</span>
-                    {verifie && <BadgeVendeurVerifie taille={13} />}
+                    {verifie && <BadgeVendeurVerifie taille={14} variante="icone" />}
                   </p>
                   {v.ville && <p className="text-xs text-indigo-900/50 truncate">{v.ville}</p>}
-                  <p className="flex items-center gap-1 text-xs text-indigo-900/50 mt-1">
-                    <Heart size={11} /> {v._count.suivis} abonné{v._count.suivis > 1 ? "s" : ""}
-                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    {stats.nbAvis > 0 && (
+                      <p className="flex items-center gap-1 text-xs text-mango-600">
+                        <Star size={11} className="fill-mango-500 text-mango-500" /> {stats.noteMoyenne.toFixed(1)}
+                      </p>
+                    )}
+                    <p className="flex items-center gap-1 text-xs text-indigo-900/50">
+                      <Heart size={11} /> {v._count.suivis} abonné{v._count.suivis > 1 ? "s" : ""}
+                    </p>
+                  </div>
                 </div>
               </Link>
             );
