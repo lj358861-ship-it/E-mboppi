@@ -5,6 +5,7 @@ import PromoCarousel from "@/components/PromoCarousel";
 import RayonPromo from "@/components/RayonPromo";
 import ProduitsSuivis from "@/components/ProduitsSuivis";
 import IntroLogo from "@/components/IntroLogo";
+import AutoActualisation from "@/components/AutoActualisation";
 import Link from "next/link";
 import { Store, Flame } from "lucide-react";
 import { estVendeurVerifie } from "@/lib/abonnement";
@@ -80,6 +81,10 @@ export default async function Accueil() {
       {/* Écran d'intro : le logo s'assemble à l'ouverture ou à l'actualisation
           de la page d'accueil, puis disparaît après 3 secondes */}
       <IntroLogo />
+
+      {/* Actualise le fil en arrière-plan (nouveaux articles, promos...)
+          sans faire sortir le client de la page ni casser son scroll */}
+      <AutoActualisation />
 
       {/* Carrousel promotionnel néon animé */}
       <section className="px-4 md:px-8 pt-6 pb-4">
