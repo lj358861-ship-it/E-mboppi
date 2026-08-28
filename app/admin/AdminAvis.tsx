@@ -12,6 +12,8 @@ type Avis = {
   auteurCertifie?: boolean;
   createdAt: string;
   vendeur: { nomBoutique: string };
+  type: "boutique" | "produit";
+  produitTitre?: string;
 };
 
 function Etoiles({ note }: { note: number }) {
@@ -53,7 +55,8 @@ export default function AdminAvis() {
     if (!confirm(`Supprimer définitivement l'avis de "${a.nomClient || "ce client"}" ?`)) return;
     setEnCours(a.id);
     try {
-      const res = await fetch(`/api/avis/${a.id}`, { method: "DELETE" });
+      const endpoint = a.type === "produit" ? `/api/avis-produit/${a.id}` : `/api/avis/${a.id}`;
+      const res = await fetch(endpoint, { method: "DELETE" });
       const resultat = await res.json().catch(() => ({}));
       if (!res.ok) {
         alert(resultat.erreur || "Échec de la suppression de l'avis. Réessayez.");
@@ -85,7 +88,13 @@ export default function AdminAvis() {
                 {new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
               </span>
             </div>
-            <p className="text-xs text-neon-300/60 mt-0.5">Boutique : {a.vendeur.nomBoutique}</p>
+            <p className="text-xs text-neon-300/60 mt-0.5">
+              {a.type === "produit" ? (
+                <>Article : {a.produitTitre} (boutique {a.vendeur.nomBoutique})</>
+              ) : (
+                <>Boutique : {a.vendeur.nomBoutique}</>
+              )}
+            </p>
             {a.commentaire && <p className="text-sm text-neon-100/85 mt-1.5">{a.commentaire}</p>}
           </div>
 
