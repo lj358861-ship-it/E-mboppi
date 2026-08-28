@@ -96,6 +96,11 @@ model Vendeur {
   ville           String?
   logoUrl         String?
   logoPublicId    String?
+  // Bannière affichée en haut du profil boutique et sur /boutiques — voir
+  // app/vendeur/dashboard/ProfilBoutique.tsx (upload) et
+  // app/vendeur/[id]/page.tsx (affichage).
+  photoCouvertureUrl      String?
+  photoCouverturePublicId String?
   createdAt       DateTime @default(now())
 
   // Certification manuelle par l'admin (autocollant bleu, voir
