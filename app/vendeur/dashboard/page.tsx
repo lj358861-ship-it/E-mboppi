@@ -37,12 +37,12 @@ export default async function DashboardVendeur() {
 
   return (
     <div className="px-4 md:px-8 py-6 max-w-3xl mx-auto">
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex flex-col gap-2 mb-1 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2 flex-wrap">
           <h1 className="font-display text-2xl font-semibold text-indigo-900">{vendeur.nomBoutique}</h1>
           {verifie && <BadgeVendeurVerifie taille={13} variante="texte" />}
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 flex-wrap">
           <ActiverNotifications clePubliqueVapid={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null} />
           <Link
             href="/vendeur/profil"
