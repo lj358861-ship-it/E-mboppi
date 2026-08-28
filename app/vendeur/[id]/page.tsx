@@ -209,8 +209,6 @@ export default async function ProfilVendeur({ params }: { params: { id: string }
               hotSales={p.boost}
               enPromotion={p.enPromo}
               estFavori={favoris.has(p.id)}
-              noteMoyenne={p.noteMoyenne}
-              nbAvis={p.nbAvis}
             />
           ))}
         </div>

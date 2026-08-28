@@ -220,10 +220,13 @@ function BoutonsAction({ produit }: { produit: Produit }) {
   async function noter(n: number) {
     setEnvoiNote(true);
     try {
-      await fetch("/api/avis-produits", {
+      // E-Mboppi n'a pas d'avis par article, seulement par boutique (voir
+      // lib/notes.ts et app/api/avis/route.ts) — noter un produit ici note
+      // en fait sa boutique.
+      await fetch("/api/avis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ produitId: produit.id, note: n }),
+        body: JSON.stringify({ vendeurId: produit.vendeur.id, note: n }),
       });
       setNoteEnvoyee(n);
       setNotationOuverte(false);

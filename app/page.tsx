@@ -130,8 +130,6 @@ export default async function Accueil() {
                   enPromotion={p.enPromo}
                   estFavori={favoris.has(p.id)}
                   enFeu
-                  noteMoyenne={p.noteMoyenne}
-                  nbAvis={p.nbAvis}
                 />
               </div>
             ))}
@@ -182,8 +180,6 @@ export default async function Accueil() {
                   hotSales={p.boost}
                   enPromotion={p.enPromo}
                   estFavori={favoris.has(p.id)}
-                  noteMoyenne={p.noteMoyenne}
-                  nbAvis={p.nbAvis}
                 />
               </div>
             ))}
