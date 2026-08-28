@@ -103,6 +103,15 @@ export async function PATCH(req: NextRequest) {
     data.logoPublicId = body.logoPublicId || null;
   }
 
+  if (typeof body.photoCouvertureUrl === "string" && body.photoCouvertureUrl) {
+    // Supprime l'ancienne bannière sur Cloudinary avant d'enregistrer la nouvelle
+    if (vendeur.photoCouverturePublicId) {
+      await supprimerDeCloudinary(vendeur.photoCouverturePublicId, "image");
+    }
+    data.photoCouvertureUrl = body.photoCouvertureUrl;
+    data.photoCouverturePublicId = body.photoCouverturePublicId || null;
+  }
+
   const vendeurMisAJour = await prisma.vendeur.update({ where: { id: vendeur.id }, data });
 
   return NextResponse.json({ ok: true, vendeur: vendeurMisAJour });
