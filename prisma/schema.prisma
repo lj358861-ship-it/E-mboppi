@@ -44,22 +44,46 @@ model Utilisateur {
 }
 
 // Souscription aux notifications push du navigateur (Web Push standard,
-// via le service worker de la PWA — public/sw.js). Permet d'alerter un
-// vendeur AVANT qu'il n'ouvre son tableau de bord, sans dépendre de l'API
-// WhatsApp Business (non disponible pour ce MVP). Un même utilisateur peut
-// avoir plusieurs souscriptions (plusieurs appareils/navigateurs).
+// via le service worker de la PWA — public/sw.js).
+//
+// Deux publics distincts partagent ce même modèle :
+// - VENDEUR (compte, utilisateurId renseigné) : rappel de renouvellement
+//   d'abonnement, etc. — voir scripts/rappel-abonnements.ts.
+// - CLIENT (anonyme, appareilId renseigné — même identifiant que
+//   Favori/Suivi/Avis, voir lib/appareil.ts) : boutique suivie qui publie un
+//   nouvel article, promo en rapport avec sa dernière recherche, etc. —
+//   voir lib/notifications.ts.
+// Exactement un des deux champs est renseigné selon le type de souscripteur.
 model AbonnementPush {
-  id            String      @id @default(cuid())
-  utilisateurId String
-  utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
+  id            String       @id @default(cuid())
 
-  endpoint      String      @unique
+  utilisateurId String?
+  utilisateur   Utilisateur? @relation(fields: [utilisateurId], references: [id])
+
+  appareilId    String?
+
+  endpoint      String       @unique
   p256dh        String
   auth          String
 
-  createdAt     DateTime    @default(now())
+  createdAt     DateTime     @default(now())
 
   @@index([utilisateurId])
+  @@index([appareilId])
+}
+
+// Dernière recherche d'un appareil client (une seule ligne par appareil,
+// remplacée à chaque nouvelle recherche) — sert uniquement à proposer une
+// notification push quand un article en promo correspond à ce que le
+// client cherchait récemment (voir lib/notifications.ts). Aucune donnée
+// personnelle : juste le terme et, si connue, la catégorie associée.
+model RechercheRecente {
+  id         String   @id @default(cuid())
+  appareilId String   @unique
+  terme      String
+  categorie  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Vendeur {

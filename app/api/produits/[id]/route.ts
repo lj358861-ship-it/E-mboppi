@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { lireSession } from "@/lib/auth";
 import { supprimerDeCloudinary } from "@/lib/cloudinary";
 import { PHOTOS_MAX_PAR_ARTICLE } from "@/lib/media-limits";
+import { notifierRecherchePromo } from "@/lib/notifications";
 
 const STATUTS_STOCK_VALIDES = ["DISPONIBLE", "STOCK_LIMITE", "RUPTURE_STOCK"];
 
@@ -102,6 +103,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     const produit = await prisma.produit.update({ where: { id: params.id }, data: donnees });
+
+    // Article visible qui vient tout juste de passer en promo : on prévient
+    // les clients dont la dernière recherche correspond (voir
+    // lib/notifications.ts). Ne bloque jamais la réponse.
+    const vientDePasserEnPromo = donnees.enPromo === true && !produitExistant.enPromo;
+    if (vientDePasserEnPromo && produit.visible) {
+      notifierRecherchePromo(produit).catch(() => {});
+    }
+
     return NextResponse.json({ ok: true, produit });
   } catch (erreur) {
     console.error("Erreur PATCH /api/produits/[id]:", erreur);

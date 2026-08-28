@@ -5,6 +5,7 @@ import { lireIdAppareil } from "@/lib/appareil";
 import { PHOTOS_MAX_PAR_ARTICLE } from "@/lib/media-limits";
 import { classerParPertinenceMulti } from "@/lib/fuzzy";
 import { elargirTermeRecherche, inferCategorieDepuisTerme } from "@/lib/synonymes";
+import { enregistrerRecherche, notifierSuiviNouveauProduit, notifierRecherchePromo } from "@/lib/notifications";
 
 const SELECTION_VENDEUR = {
   select: {
@@ -55,6 +56,14 @@ export async function GET(req: NextRequest) {
   // Pagination : "skip" pour le défilement infini de la page recherche.
   const skip = Math.max(0, Number(req.nextUrl.searchParams.get("skip")) || 0);
   const TAILLE_PAGE = 24;
+
+  // On mémorise la dernière recherche de cet appareil (si déjà connu — voir
+  // lib/notifications.ts) pour pouvoir le prévenir plus tard qu'un article
+  // en promo correspond à ce qu'il cherchait. Seulement sur la première
+  // page (skip === 0) pour ne pas réécrire à chaque scroll infini.
+  if (q && skip === 0) {
+    enregistrerRecherche(lireIdAppareil(), q).catch(() => {});
+  }
 
   const filtrePrix: { gte?: number; lte?: number } = {};
   if (prixMin) filtrePrix.gte = Number(prixMin);
@@ -271,6 +280,17 @@ export async function POST(req: NextRequest) {
       visible: abonnementActif,
     },
   });
+
+  // Notifications CLIENT (pas de compte, appareil anonyme — voir
+  // lib/notifications.ts) : uniquement si l'article est réellement visible
+  // (abonnement vendeur actif), sinon personne ne peut de toute façon le
+  // voir en cliquant sur la notification. Ne bloque jamais la réponse.
+  if (produit.visible) {
+    notifierSuiviNouveauProduit(produit).catch(() => {});
+    if (produit.enPromo) {
+      notifierRecherchePromo(produit).catch(() => {});
+    }
+  }
 
   return NextResponse.json({ ok: true, produit });
 }

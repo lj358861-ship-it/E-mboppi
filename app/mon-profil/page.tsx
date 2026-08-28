@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { User, Heart, Store, Loader2, Check } from "lucide-react";
+import ActiverNotifications from "@/components/ActiverNotifications";
 
 export default function MonProfil() {
   const [pseudo, setPseudo] = useState("");
@@ -46,10 +47,21 @@ export default function MonProfil() {
       <h1 className="font-display text-2xl font-semibold text-indigo-900 mb-1 flex items-center gap-2">
         <User className="text-indigo-900" size={22} /> Mon profil
       </h1>
-      <p className="text-sm text-indigo-900/60 mb-6">
+      <p className="text-sm text-indigo-900/60 mb-4">
         Ce profil est propre à cet appareil — pas besoin de compte ni de mot de passe. Vos favoris
         et boutiques suivies restent enregistrés ici.
       </p>
+
+      <div className="mb-6">
+        <ActiverNotifications
+          clePubliqueVapid={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null}
+          variante="client"
+        />
+        <p className="text-xs text-indigo-900/40 mt-2">
+          Soyez prévenu quand une boutique que vous suivez publie un nouvel article, ou qu'un
+          article en promo correspond à l'une de vos recherches.
+        </p>
+      </div>
 
       {chargement ? (
         <p className="text-sm text-indigo-900/50 flex items-center gap-2">

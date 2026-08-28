@@ -32,27 +32,28 @@ export function notificationsPushDisponibles() {
   return Boolean(CLE_PUBLIQUE && CLE_PRIVEE);
 }
 
-/**
- * Envoie une notification à toutes les souscriptions (appareils) d'un
- * utilisateur. Supprime automatiquement les souscriptions devenues
- * invalides (désinstallation, permission révoquée...).
- */
-export async function envoyerNotificationUtilisateur(
-  utilisateurId: string,
-  payload: { titre: string; corps: string; url?: string }
-) {
-  if (!notificationsPushDisponibles()) return { envoyees: 0 };
-  sAssurerConfigure();
+type SouscriptionPush = { id: string; endpoint: string; p256dh: string; auth: string };
 
-  const souscriptions = await prisma.abonnementPush.findMany({ where: { utilisateurId } });
+/**
+ * Envoie une notification à une liste de souscriptions déjà chargées, et
+ * retire automatiquement celles devenues invalides (désinstallation,
+ * permission révoquée...). Fonction interne partagée par les envois
+ * vendeur (utilisateurId) et client (appareilId) ci-dessous.
+ */
+async function envoyerAuxSouscriptions(
+  souscriptions: SouscriptionPush[],
+  payload: { titre: string; corps: string; url?: string },
+  urlParDefaut: string
+) {
   if (souscriptions.length === 0) return { envoyees: 0 };
+  sAssurerConfigure();
 
   let envoyees = 0;
   for (const s of souscriptions) {
     try {
       await webpush.sendNotification(
         { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-        JSON.stringify({ title: payload.titre, body: payload.corps, url: payload.url || "/vendeur/dashboard" })
+        JSON.stringify({ title: payload.titre, body: payload.corps, url: payload.url || urlParDefaut })
       );
       envoyees++;
     } catch (err: unknown) {
@@ -64,4 +65,32 @@ export async function envoyerNotificationUtilisateur(
     }
   }
   return { envoyees };
+}
+
+/**
+ * VENDEUR — notification à toutes les souscriptions d'un compte connecté
+ * (rappel de renouvellement d'abonnement, etc.). Ouvre le tableau de bord
+ * vendeur par défaut au clic.
+ */
+export async function envoyerNotificationUtilisateur(
+  utilisateurId: string,
+  payload: { titre: string; corps: string; url?: string }
+) {
+  if (!notificationsPushDisponibles()) return { envoyees: 0 };
+  const souscriptions = await prisma.abonnementPush.findMany({ where: { utilisateurId } });
+  return envoyerAuxSouscriptions(souscriptions, payload, "/vendeur/dashboard");
+}
+
+/**
+ * CLIENT — notification à toutes les souscriptions d'un appareil anonyme
+ * (boutique suivie qui publie, promo en rapport avec une recherche
+ * récente...). Ouvre la page d'accueil par défaut au clic.
+ */
+export async function envoyerNotificationAppareil(
+  appareilId: string,
+  payload: { titre: string; corps: string; url?: string }
+) {
+  if (!notificationsPushDisponibles()) return { envoyees: 0 };
+  const souscriptions = await prisma.abonnementPush.findMany({ where: { appareilId } });
+  return envoyerAuxSouscriptions(souscriptions, payload, "/");
 }
